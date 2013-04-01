@@ -11,7 +11,7 @@ class VorticityMagnitudeField(Field):
     be used with scalar fields of wall bounded turbulent flows
     like enstrophy, vorticity magnitude, vorticity components...
     """
-    def __init__(self, data, stats, X0):
+    def __init__(self, data, stats, NX0):
         """
         Data field
         """
@@ -23,7 +23,7 @@ class VorticityMagnitudeField(Field):
         y = stats.yr[:data.shape[1]]
         z = stats.z[:data.shape[2]]
         super(VorticityMagnitudeField, self).__init__(data, x, y, z)
-        self.X0 = X0
+        self.NX0 = NX0
 
     def scale_factor_wall(self):
         """
@@ -69,8 +69,8 @@ class VorticityMagnitudeField(Field):
         (NX, NY, NZ) = self.data.shape
         result = np.empty((NY,), dtype=np.double)
         for j in range(NY):
-            result[j] = np.count_nonzero(
-                self.data > thres).astype(np.double)/NX/NZ
+            result[j] = np.array(np.count_nonzero(
+                self.data[:,j,:] > thres), dtype=np.double)/NX/NZ
 
         return result
 
@@ -98,42 +98,48 @@ class VorticityMagnitudeField(Field):
         Vertical distance profile since first detection of the threshold.
         This is the usual method found in the bibliography.
         """
-        RANGE = 2
+        RANGE = 0.5
         NX = self.data.shape[0]
         NZ = self.data.shape[2]
-        yr = self.y[::-1]
+
+        #Coordinates at the vertices
+        yr=self.yr.copy()[::-1]
         yr[:] = -(yr[:]-yr[0])
-        ogrid = np.linspace(-RANGE, RANGE, 100)
-        acc = np.zeros((100,), dtype=np.float64)
+        ogrid = np.linspace(-RANGE,RANGE,100)
+        acc = np.zeros((100,),dtype=np.float64)
+        data = np.zeros((len(yr),),dtype=np.float32)
 
-        for i, k in product(range(NX), range(NZ)):
-            yloc = yr[np.where(self.data[i, :, k] > thres)[0][0]]
-            itp = interpolate.interp1d(yr-yloc, self.data[i, :, k])
+        for i,k in product(range(NX),range(NZ)):
+            data[:] = self.data[i,::-1,k] 
+            yloc = yr[np.where(data>thres)[0][0]]
+            itp = interpolate.interp1d(yr-yloc,data)
             acc[:] = acc[:] + itp(ogrid)
-
+    
         return acc/NX/NZ
 
     def vertical_distance_histogram(self, thres, ybins, xbins):
         """
         Vertical distance histogram from the first vertical detection.
         """
-        RANGE = 1
+        RANGE = 0.1
         NX = self.data.shape[0]
         NY = self.data.shape[1]
         NZ = self.data.shape[2]
 
-        yr = self.y[::-1]
+        yr = self.yr.copy()[::-1]
         yr[:] = -(yr[:]-yr[0])
         ogrid = np.linspace(-RANGE, RANGE, 100)
         acc = np.zeros((100,), dtype=np.float64)
+        data = np.zeros((len(yr),),dtype=np.float32)
         height_map = np.empty((NX, NZ), dtype=np.float64)
 
         #First thing is to compute the height map
         for i, k in product(range(NX), range(NZ)):
-            yloc = yr[np.where(self.data[i, :, k] > thres)[0][0]]
-            itp = interpolate.interp1d(yr-yloc, self.data[i, :, k])
+            data[:] = self.data[i,::-1,k]
+            yloc = yr[np.where(data > thres)[0][0]]
+            itp = interpolate.interp1d(yr-yloc, data)
             acc[:] = itp(ogrid)
-            height_map[i, k] = ogrid[np.where(acc > thres)[0][0]] + yloc
+            height_map[i, k] = -ogrid[np.where(acc > thres)[0][0]] - yloc + yr[-1]
 
         # Set histogram up
         NHISTY = len(ybins)
@@ -146,13 +152,13 @@ class VorticityMagnitudeField(Field):
 
         return histogram
 
-    def ball_distance_histogram(self, thres, nbins=200, FRAME=100):
+    def ball_distance_histogram(self, thres, nbins=200, npoints=1000000, FRAME=100):
         """
         Minimum ball distance histogram from the single largest surface.
         """
         surface = self.extract_largest_surface(thres)
-        voxels = surface.refined_point_list()
-        trgt, sval = self.generate_target_points(1000000, FRAME)
+        voxels = surface.refined_point_list(self)
+        trgt, sval = self.generate_target_points(npoints, FRAME)
         dist = distances(voxels, trgt)
         return np.histogram2d(dist, np.log10(sval), bins=nbins)
 
