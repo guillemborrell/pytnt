@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 
 #Modules imported for testing
@@ -34,6 +35,7 @@ class Entity(object):
 
         level = 1
         while len(mapping) > 1:
+            print(level)
             nlevel = dict()
             for key, idx in mapping.items():
                 x = self.voxels[0][idx]/2**level

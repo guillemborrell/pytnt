@@ -1,5 +1,6 @@
+from __future__ import print_function
 import numpy as np
-from scipy.ndimage.measurements import label
+from scipy.ndimage.measurements import label, find_objects
 from entity import Entity
 from surface import Surface
 from numpy.random import randint
@@ -16,35 +17,38 @@ class Field(object):
         self.yr = yr
         self.zr = zr
 
-    def label_gt(self, thres):
+    def label_gt_largest(self, thres):
         """
         Extracts all the connected entities from the flow. Higher than
-        the threshold
+        the threshold. Fast.
         """
         labeled, nsurf = label(self.data > thres)
 
-        entity_list = list()
-        for i in range(1, nsurf+1):
-            entity_list.append(Entity(np.where(labeled == i)))
+        volumes = np.empty((nsurf,), dtype=np.int)
 
-        return entity_list
+        for obj, objnum in zip(find_objects(labeled), range(nsurf)):
+            volumes[objnum] = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
 
-    def label_lt(self, thres):
+        return Entity(np.where(labeled == volumes.argmax()+1))
+
+    def label_lt_largest(self, thres):
         """
         Extracts all the connected entities from the flow. Lower than
         the threshold
         """
         labeled, nsurf = label(self.data < thres)
 
-        entity_list = list()
-        for i in range(1, nsurf+1):
-            entity_list.append(Entity(np.where(labeled == i)))
+        volumes = np.empty((nsurf,), dtype=np.int)
 
-        return entity_list
+        for obj, objnum in zip(find_objects(labeled), range(nsurf)):
+            volumes[objnum] = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
 
-    def extract_surfaces(self, thres):
+        return Entity(np.where(labeled == volumes.argmax()+1))
+
+
+    def label_surfaces(self,thres):
         """
-        Extracts all the surfaces present in the field
+        Return an array with all the surfaces labelled
         """
         ens = self.data
         mask = ens > thres
@@ -71,7 +75,13 @@ class Field(object):
         void[:, :] = np.bitwise_and(void[:, :], mask[1:, 1:, 1:])
 
         labeled, nsurf = label(np.bitwise_not(np.bitwise_or(fill, void)))
+        return labeled,nsurf
 
+    def extract_surfaces(self, thres):
+        """
+        Extracts all the surfaces present in the field. SLOOOOW
+        """
+        labeled, nsurf = self.label_surfaces(thres)
         surflist = list()
         for i in range(1, nsurf+1):
             surflist.append(Surface(np.where(labeled == i), thres))
@@ -82,22 +92,17 @@ class Field(object):
         """
         Extracts the largest surface present in the field
         """
-        cursor = 0
-        largest_size = 0
+        labeled, nsurf = self.label_surfaces(thres)
+        volumes = np.empty((nsurf,), dtype=np.int)
 
-        surface_list = self.extract_surfaces(thres)
+        for obj, objnum in zip(find_objects(labeled), range(nsurf)):
+            volumes[objnum] = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
 
-        for i, surface in enumerate(surface_list):
-            surfsize = surface.number_of_voxels()
-            if surfsize > largest_size:
-                cursor = i
-                largest_size = surfsize
-
-        return surface_list[cursor]
+        return Surface(np.where(labeled == volumes.argmax()+1), thres)
 
     def extract_surfaces_gt(self, thres, nvoxels=27):
         """
-        Provides the surface list for surfaces larger than nvoxels
+        Provides the surface list for surfaces larger than nvoxels. SLOOOW
         """
         new_surface_list = list()
 
