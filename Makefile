@@ -1,9 +1,17 @@
 CC=gcc
-CFLAGS=-O3 -fPIC -fopenmp -c
-LDFLAGS=-shared -Wl,-soname,libkdtree.so -o libkdtree.so -lc -lm -lgomp
+CFLAGS=-O3 -fPIC -c
+LDFLAGS=-shared -Wl,-soname,libkdtree.so -o libkdtree.so -lc -lm
+
+# CC=gcc
+# CFLAGS=-O3 -fPIC -fopenmp -c
+# LDFLAGS=-shared -Wl,-soname,libkdtree.so -o libkdtree.so -lc -lm -lgomp
 
 # CC=icc
 # CFLAGS=-O3 -fPIC -openmp -c
+# LDFLAGS=-shared -Wl,-soname,libkdtree.so -o libkdtree.so -lc
+
+# CC=icc
+# CFLAGS=-O3 -fPIC -c
 # LDFLAGS=-shared -Wl,-soname,libkdtree.so -o libkdtree.so -lc
 
 all: kdtree.o

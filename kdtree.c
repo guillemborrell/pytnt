@@ -110,7 +110,7 @@ void nearest(struct kd_node_t *root, struct kd_node_t *nd, int i, int dim,
 int distances(double *voxels,int NPOINTS,
 	      double *focus,int NDIST, double *distances)
 {
-#pragma omp parallel
+  #pragma omp parallel
   {
     struct kd_node_t *root, *found, *vt;
     struct kd_node_t ft;
@@ -129,7 +129,7 @@ int distances(double *voxels,int NPOINTS,
     
     root = make_tree(vt, NPOINTS, 0, 3);
     
-#pragma omp for schedule(dynamic)
+    #pragma omp for schedule(dynamic)
     for (i = 0; i < NDIST; i++){
       //if (i%(NDIST/100) == 0) printf("%i of %i\n",i,NDIST);
       ft.x[0] = focus[3*i]; ft.x[1] = focus[(3*i)+1]; ft.x[2] = focus[(3*i)+2];
