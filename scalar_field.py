@@ -38,7 +38,7 @@ class VorticityMagnitudeField(Field):
         """
         NX = self.data.shape[0]
         return self.stats.Re * self.stats.utau[self.NX0 + NX/2]**2 *\
-            np.sqrt(self.stats.Retau()[self.NX0 + NX/2])
+            np.sqrt(self.stats.Retau(self.NX0 + NX/2))
 
     def scale_wall(self):
         """

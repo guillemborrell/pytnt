@@ -103,21 +103,29 @@ class MiniStats(object):
 
         return res
 
-    def delta99(self):
-        res = np.empty((self.NX,))
-        for i in range(self.NX):
-            uint = interpolate.interp1d(self.ua[i, :], self.yr)
-            res[i] = uint(0.99)
-        return res
+    def delta99(self,j=0):
+        if j==0:
+            res = np.empty((self.NX,))
+            for i in range(self.NX):
+                uint = interpolate.interp1d(self.ua[i, :], self.yr)
+                res[i] = uint(0.99)
+            return res
+        else:
+            uint = interpolate.interp1d(self.ua[j, :], self.yr)
+            return uint(0.99)
 
     def Reth(self):
         theta = self.theta()
         Ue = self.Ue()
         return theta*self.Re*Ue
 
-    def Retau(self):
-        d99 = self.delta99()
-        return d99*self.utau*self.Re
+    def Retau(self,i=0):
+        if i == 0:
+            d99 = self.delta99()
+            return d99*self.utau*self.Re
+        else:
+            d99 = self.delta99(i)
+            return d99*self.utau[i]*self.Re
 
     def ydelta(self, i):
         return self.yr/self.delta99()[i]
