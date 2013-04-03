@@ -21,7 +21,7 @@ class VorticityMagnitudeField(Field):
         # It assumes that the first point of the dataset in the
         # wall normal direction is the wall.
         y = stats.yr[:data.shape[1]]
-        z = stats.z[:data.shape[2]]
+        z = stats.zr[:data.shape[2]]
         super(VorticityMagnitudeField, self).__init__(data, x, y, z)
         self.NX0 = NX0
 
@@ -58,7 +58,7 @@ class VorticityMagnitudeField(Field):
 
         for i in range(NX):
             adim = self.stats.Re * self.stats.utau[self.NX0 + i]**2 *\
-                np.sqrt(self.stats.Retau()[self.NX0 + i])
+                np.sqrt(self.stats.Retau(self.NX0 + i))
             self.data[i, :, :] = self.data[i, :, :]/adim
 
     def intermittency_profile(self, thres):

@@ -1,3 +1,4 @@
+from __future__ import print_function, division
 import numpy as np
 import tables
 from scipy import interpolate
@@ -17,6 +18,7 @@ class MiniStats(object):
         self.z = None
         self.y = None
         self.yr = None
+        self.zr = None
         self.ua = None
         self.us = None
         self.va = None
@@ -39,9 +41,10 @@ class MiniStats(object):
         self.NZ = self.stats.root.nz2.read()[0]*2
 
         self.Re = self.stats.root.Re.read()[0]
-        self.x = np.linspace(0, self.stats.root.ax.read()*np.pi, self.NX)
-        self.z = np.linspace(0, self.stats.root.az.read()*np.pi*2, self.NZ)
-        self.y = self.stats.root.y.read()
+        self.x  = np.linspace(0, self.stats.root.ax.read()*np.pi, self.NX)
+        self.z  = np.linspace(0, self.stats.root.az.read()*np.pi*2, self.NZ)
+        self.zr = np.linspace(0, self.stats.root.az.read()*np.pi*2, 3*self.NZ//2)
+        self.y  = self.stats.root.y.read()
         self.yr = self.y[1:-1]
         self.dx = self.stats.root.ax.read()*np.pi
         self.dz = self.stats.root.az.read()*2*np.pi
@@ -82,10 +85,10 @@ class MiniStats(object):
     def close(self):
         self.stats.close()
 
-    def Ue(self):
+    def Ue(self,i=False):
         return np.mean(self.ua[:, -15:-5], axis=1)
 
-    def theta(self):
+    def theta(self,i=False):
         Ue = self.Ue()
         res = np.empty((self.NX,))
         for i in range(self.NX):
@@ -95,7 +98,7 @@ class MiniStats(object):
 
         return res
 
-    def deltastar(self):
+    def deltastar(self,i=False):
         Ue = self.Ue()
         res = np.empty((self.NX,))
         for i in range(self.NX):
@@ -103,29 +106,40 @@ class MiniStats(object):
 
         return res
 
-    def delta99(self):
-        res = np.empty((self.NX,))
-        for i in range(self.NX):
-            uint = interpolate.interp1d(self.ua[i, :], self.yr)
-            res[i] = uint(0.99)
-        return res
+    def delta99(self,i=False):
+        if i:
+            uint = interpolate.interp1d(self.ua[i, :].flatten(), self.yr)
+            return uint(0.99)
+        else:
+            res = np.empty((self.NX,))
+            for i in range(self.NX):
+                uint = interpolate.interp1d(self.ua[i, :].flatten(), self.yr)
+                res[i] = uint(0.99)
+            return res
 
-    def Reth(self):
+    def Reth(self,i=False):
         theta = self.theta()
         Ue = self.Ue()
         return theta*self.Re*Ue
 
-    def Retau(self):
-        d99 = self.delta99()
-        return d99*self.utau*self.Re
+    def Retau(self,i=False):
+        if i:
+            d99 = self.delta99(i)
+            return d99*self.utau[i]*self.Re
+        else:
+            d99 = self.delta99()
+            return d99*self.utau*self.Re
 
-    def ydelta(self, i):
-        return self.yr/self.delta99()[i]
+    def ydelta(self, i=False):
+        if i:
+            return self.yr/self.delta99()
+        else:
+            return self.yr/self.delta99(i)
 
-    def xdelta(self, i):
+    def xdelta(self, i=False):
         return self.x/self.delta99()[i]
 
-    def zdelta(self, i):
+    def zdelta(self, i=False):
         return self.z/self.delta99()[i]
 
     def load_budgets(self, budgets_file):
