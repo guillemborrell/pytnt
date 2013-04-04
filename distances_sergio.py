@@ -10,9 +10,9 @@ if __name__ == '__main__':
     f = tables.openFile('/data4/guillem/distances/BL2000.000.real.h5')
     st = MiniStats('/data4/guillem/distances/tbl.2000.141-996.st.h5',rough=False)
     NX0 = 5000
-    NX = 600
+    NX = 300
     NY = 300
-    NZ = 1000
+    NZ = 300
 
     field = VorticityMagnitudeField(f.root.enstrophy[NX0:NX0+NX,:NY,:NZ],st,NX0)
     print(st.Retau(NX0))
@@ -22,7 +22,8 @@ if __name__ == '__main__':
     thresholds = np.logspace(-4,-3,10)
     hists.append(thresholds)
     for thres in thresholds:
-        hists.append(field.ball_distance_histogram(thres,200,10000000,30))
+        print(thres)
+        hists.append(field.ball_distance_histogram(thres,200,1000000,30))
         
     resfile = open('/data4/guillem/distances/histogram_ball_outer.560.dat','w')
     pickle.dump(hists,resfile)
@@ -35,7 +36,8 @@ if __name__ == '__main__':
     thresholds = np.logspace(-3,-2,10)
     hists.append(thresholds)
     for thres in thresholds:
-        hists.append(field.ball_distance_histogram(thres,200,10000000,30))
+        print(thres)
+        hists.append(field.ball_distance_histogram(thres,200,1000000,30))
         
     resfile = open('/data4/guillem/distances/histogram_ball_wall.560.dat','w')
     pickle.dump(hists,resfile)
