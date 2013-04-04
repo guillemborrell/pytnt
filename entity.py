@@ -14,8 +14,19 @@ class Entity(object):
         self.voxels = voxels
 
     def mask(self):
-        bool_mask = np.empty((field.NX, field.NY, field.NZ),dtype=np.bool)
-        bool_mask[e.voxels[0],e.voxels[1],e.voxels[2]] = True
+        """
+        Returns a local mask with the entity.
+        """
+        NX0 = self.voxels[0].min()
+        NY0 = self.voxels[1].min()
+        NZ0 = self.voxels[2].min()
+        bool_mask = np.empty((
+                self.voxels[0].max() - NX0 + 1,
+                self.voxels[1].max() - NY0 + 1,
+                self.voxels[2].max() - NZ0 + 1),dtype=np.bool)
+        bool_mask[self.voxels[0]-NX0,
+                  self.voxels[1]-NY0,
+                  self.voxels[2]-NZ0] = True
         return bool_mask
 
     def number_of_voxels(self):
