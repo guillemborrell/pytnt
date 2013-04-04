@@ -13,6 +13,11 @@ class Entity(object):
     def __init__(self, voxels):
         self.voxels = voxels
 
+    def mask(self):
+        bool_mask = np.empty((field.NX, field.NY, field.NZ),dtype=np.bool)
+        bool_mask[e.voxels[0],e.voxels[1],e.voxels[2]] = True
+        return bool_mask
+
     def number_of_voxels(self):
         return len(self.voxels[0])
 
