@@ -27,6 +27,6 @@ if __name__ == '__main__':
         hists.append(field.ball_distance_histogram(thres,200,20000000,30))
         
     resfile = open('/data4/guillem/distances/histogram_ball_wall.560.dat','w')
-    pickle.dump(histogram_dist,resfile)
+    pickle.dump(hists,resfile)
     resfile.close()
 

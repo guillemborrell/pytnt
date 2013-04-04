@@ -25,6 +25,13 @@ class VorticityMagnitudeField(Field):
         super(VorticityMagnitudeField, self).__init__(data, x, y, z)
         self.NX0 = NX0
 
+    @property
+    def ydelta(self):
+        """
+        Return y/delta99 at the middle of the box
+        """
+        return self.yr/self.stats.delta99(self.NX0+self.NX/2)
+
     def scale_factor_wall(self):
         """
         Returns the scale factor for vorticity magnitude in wall units

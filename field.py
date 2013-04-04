@@ -17,6 +17,18 @@ class Field(object):
         self.yr = yr
         self.zr = zr
 
+    @property
+    def NX(self):
+        return self.data.shape[0]
+
+    @property
+    def NY(self):
+        return self.data.shape[1]
+
+    @property
+    def NZ(self):
+        return self.data.shape[2]
+
     def label_gt_largest(self, thres):
         """
         Extracts all the connected entities from the flow. Higher than
