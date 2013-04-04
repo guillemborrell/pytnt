@@ -195,12 +195,12 @@ class TestField(unittest.TestCase):
         self.assertTrue(np.abs(norm) < 0.003,
                         "Error higher than expected {} > {}".format(norm, 0.003))
 
-    def test_label_lt(self):
-        sphere_entity = self.sphere.label_lt(1.0)[0]  # Only one entity, I know
+    def test_label_lt_largest(self):
+        sphere_entity = self.sphere.label_lt_largest(1.0)
         self.assertEqual(sphere_entity.number_of_voxels(), 1904)
         self.assertEqual(sphere_entity.genus(), 0)
 
-    def test_label_gt(self):
-        sphere_entity = self.sphere.label_gt(1.0)[0]  # Only one entity, I know
+    def test_label_gt_largest(self):
+        sphere_entity = self.sphere.label_gt_largest(1.0)
         self.assertEqual(sphere_entity.number_of_voxels(), 30864)
         self.assertEqual(sphere_entity.genus(), -1)

@@ -21,36 +21,24 @@ class Entity(object):
         Computes the box counting exponent, that is used to compute the
         fractal dimension. It can be used in non cubic boxes.
         """
-        # I will use python sets, because numpy's support for arrays of
-        # arrays is a bit clumsy
         NY = len(self.voxels[1])
         NZ = len(self.voxels[2])
 
         # The implementation uses a hash table to identify voxels in the tree
         boxcount = list()
-        mapping = dict(izip(self.voxels[0]*NY*NZ +
-                            self.voxels[1]*NZ +
-                            self.voxels[2], count()))
-        boxcount.append(len(mapping))
+        value = np.arange(len(self.voxels[0]))
+        boxcount.append(len(value))
 
         level = 1
-        while len(mapping) > 1:
-            print(level)
-            nlevel = dict()
-            for key, idx in mapping.items():
-                x = self.voxels[0][idx]/2**level
-                y = self.voxels[1][idx]/2**level
-                z = self.voxels[2][idx]/2**level
-                nlevel[x*NY*NZ + y*NZ + z] = idx
-
+        while len(value) > 1:
+            x = self.voxels[0][value]/2**level
+            y = self.voxels[1][value]/2**level
+            z = self.voxels[2][value]/2**level
+            idx = np.unique(x*NY*NZ + y*NZ + z,return_index=True)[1]
+            value = value[idx]
+            
             level += 1
-            boxset = set(nlevel.keys())
-
-            mapping = dict()
-            for key in boxset:
-                mapping[key] = nlevel[key]
-
-            boxcount.append(len(boxset))
+            boxcount.append(len(value))
 
         return np.array(boxcount)
 
