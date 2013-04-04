@@ -131,16 +131,13 @@ class MiniStats(object):
             return d99*self.utau*self.Re
 
     def ydelta(self, i=False):
-        if i:
-            return self.yr/self.delta99()
-        else:
-            return self.yr/self.delta99(i)
+        return self.yr/self.delta99(i)
 
     def xdelta(self, i=False):
-        return self.x/self.delta99()[i]
+        return self.x/self.delta99(i)
 
     def zdelta(self, i=False):
-        return self.z/self.delta99()[i]
+        return self.z/self.delta99(i)
 
     def load_budgets(self, budgets_file):
         self.budgets = tables.openFile(budgets_file, mode='r')

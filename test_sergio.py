@@ -18,15 +18,16 @@ if __name__ == '__main__':
     field = VorticityMagnitudeField(f.root.enstrophy[NX0:NX0+NX,:NY,:NZ],st,NX0)
     print(st.Retau()[NX0])
 
-    field.scale_wall()
+    field.scale_outer()
+    print(field.data.min(), field.data.max())
     hists = list()
 
-    thresholds = np.logspace(-3,-1,10)
+    thresholds = np.logspace(-5,-3,10)
     hists.append(thresholds)
     for thres in thresholds:
         hists.append(field.ball_distance_histogram(thres,200,20000000,30))
         
-    resfile = open('/data4/guillem/distances/histogram_ball_wall.560.dat','w')
+    resfile = open('/data4/guillem/distances/histogram_ball_outer.560.dat','w')
     pickle.dump(hists,resfile)
     resfile.close()
 
