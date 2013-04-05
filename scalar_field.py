@@ -44,8 +44,8 @@ class VorticityMagnitudeField(Field):
         Returns the scale factor for vorticity magnitude in outer units
         """
         NX = self.data.shape[0]
-        return self.stats.Re * self.stats.utau[self.NX0 + NX/2]**2 *\
-            np.sqrt(self.stats.Retau(self.NX0 + NX/2))
+        return (self.stats.Re * self.stats.utau[self.NX0 + i]**2)/np.sqrt(
+            self.stats.Retau(self.NX0 + i))
 
     def scale_wall(self):
         """
@@ -64,8 +64,8 @@ class VorticityMagnitudeField(Field):
         NX = self.data.shape[0]
 
         for i in range(NX):
-            adim = self.stats.Re * self.stats.utau[self.NX0 + i]**2 *\
-                np.sqrt(self.stats.Retau(self.NX0 + i))
+            adim = (self.stats.Re * self.stats.utau[self.NX0 + i]**2)/np.sqrt(
+                self.stats.Retau(self.NX0 + i))
             self.data[i, :, :] = self.data[i, :, :]/adim
 
     def intermittency_profile(self, thres):

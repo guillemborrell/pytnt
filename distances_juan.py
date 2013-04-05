@@ -15,7 +15,7 @@ if __name__ == '__main__':
     NX0 = f.root.NX0.read()
     OFFSET = 50
     NX = 600
-    NY = 300
+    NY = 400
     NZ = 600
 
     field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     NX0 = f.root.NX0.read()
     OFFSET = 50
     NX = 600
-    NY = 300
+    NY = 400
     NZ = 600
 
     field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     NX0 = f.root.NX0.read()
     OFFSET = 50
     NX = 600
-    NY = 300
+    NY = 400
     NZ = 600
 
     field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
