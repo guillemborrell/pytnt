@@ -16,7 +16,7 @@ if __name__ == '__main__':
     OFFSET = 50
     NX = 600
     NY = 400
-    NZ = 600
+    NZ = 3500
 
     field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
     print(st.Retau(NX0+OFFSET+NX//2))
@@ -24,12 +24,12 @@ if __name__ == '__main__':
     field.scale_outer()
     hists = list()
 
-    thresholds = np.logspace(-4,-3,10)
+    thresholds = np.logspace(-2,0,10)
     hists.append(thresholds)
     for thres in thresholds:
         print(thres)
         clk = time.clock()
-        hists.append(field.ball_distance_histogram(thres,200,3000000,150))
+        hists.append(field.ball_distance_histogram(thres,200,10000000,150))
         print("distance computations took",time.clock()-clk,"seconds")
         
     f.close()
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     OFFSET = 50
     NX = 600
     NY = 400
-    NZ = 600
+    NZ = 3500
 
     field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
     print(st.Retau(NX0+OFFSET+NX//2))
@@ -52,12 +52,12 @@ if __name__ == '__main__':
     field.scale_outer()
     hists = list()
 
-    thresholds = np.logspace(-4,-3,10)
+    thresholds = np.logspace(-2,0,10)
     hists.append(thresholds)
     for thres in thresholds:
         print(thres)
         clk = time.clock()
-        hists.append(field.ball_distance_histogram(thres,200,3000000,150))
+        hists.append(field.ball_distance_histogram(thres,200,10000000,150))
         print("distance computations took",time.clock()-clk,"seconds")
         
     f.close()
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     OFFSET = 50
     NX = 600
     NY = 400
-    NZ = 600
+    NZ = 3500
 
     field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
     print(st.Retau(NX0+OFFSET+NX//2))
@@ -80,12 +80,12 @@ if __name__ == '__main__':
     field.scale_outer()
     hists = list()
 
-    thresholds = np.logspace(-4,-3,10)
+    thresholds = np.logspace(-2,0,10)
     hists.append(thresholds)
     for thres in thresholds:
         print(thres)
         clk = time.clock()
-        hists.append(field.ball_distance_histogram(thres,200,3000000,150))
+        hists.append(field.ball_distance_histogram(thres,200,10000000,150))
         print("distance computations took",time.clock()-clk,"seconds")
         
     f.close()

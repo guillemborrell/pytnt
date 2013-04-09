@@ -12,7 +12,7 @@ if __name__ == '__main__':
     f = tables.openFile('/data4/guillem/distances/BL2000.000.real.h5')
     st = MiniStats('/data4/guillem/distances/tbl.2000.141-996.st.h5',rough=False)
     NX0 = 5000
-    NX = 600
+    NX = 500
     NY = 300
     NZ = 1000
 
@@ -20,7 +20,8 @@ if __name__ == '__main__':
     field = VorticityMagnitudeField(f.root.enstrophy[NX0:NX0+NX,:NY,:NZ],st,NX0)
     print(st.Retau()[NX0])
     field.scale_outer()
-    thresholds = np.logspace(-4,-3,10)
+    print(field.data.min(),field.data.max(),field.scale_factor_outer())
+    thresholds = np.logspace(-1.33,0.33,20)
     Retau650.append(thresholds)
     Retau650.append(field.ydelta)
     for thres in thresholds:
@@ -47,14 +48,15 @@ if __name__ == '__main__':
     NX0 = f.root.NX0.read()
     OFFSET = 50
     NX = 600
-    NY = 400
+    NY = 550
     NZ = 3500
 
     Retau1000 = list()
     field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
     print(st.Retau(NX0+OFFSET+NX//2))
     field.scale_outer()
-    thresholds = np.logspace(-4,-3,10)
+    print(field.data.min(),field.data.max())
+    thresholds = np.logspace(-1.33,0.33,20)
     Retau1000.append(thresholds)
     Retau1000.append(field.ydelta)
     for thres in thresholds:
@@ -83,14 +85,15 @@ if __name__ == '__main__':
     NX0 = f.root.NX0.read()
     OFFSET = 50
     NX = 600
-    NY = 450
+    NY = 550
     NZ = 3500
 
     Retau1500 = list()
     field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
     print(st.Retau(NX0+OFFSET+NX//2))
     field.scale_outer()
-    thresholds = np.logspace(-4,-3,10)
+    print(field.data.min(),field.data.max())
+    thresholds = np.logspace(-1.33,0.33,20)
     Retau1500.append(thresholds)
     Retau1500.append(field.ydelta)
     for thres in thresholds:
@@ -119,14 +122,15 @@ if __name__ == '__main__':
     NX0 = f.root.NX0.read()
     OFFSET = 50
     NX = 600
-    NY = 500
+    NY = 550
     NZ = 3500
 
     Retau2000 = list()
     field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
     print(st.Retau(NX0+OFFSET+NX//2))
     field.scale_outer()
-    thresholds = np.logspace(-4,-3,10)
+    print(field.data.min(),field.data.max())
+    thresholds = np.logspace(-1.33,0.33,20)
     Retau2000.append(thresholds)
     Retau2000.append(field.ydelta)
     for thres in thresholds:
@@ -147,6 +151,6 @@ if __name__ == '__main__':
     st.close()
 
 
-    resfile = open('/data4/guillem/distances/intermittency_characteristics.pickle.dat','w')
+    resfile = open('/data4/guillem/distances/intermittency_characteristics_outer.pickle.dat','w')
     pickle.dump(Results,resfile)
     resfile.close()
