@@ -20,7 +20,7 @@ class Entity(object):
         NX0 = self.voxels[0].min()
         NY0 = self.voxels[1].min()
         NZ0 = self.voxels[2].min()
-        bool_mask = np.empty((
+        bool_mask = np.zeros((
                 self.voxels[0].max() - NX0 + 1,
                 self.voxels[1].max() - NY0 + 1,
                 self.voxels[2].max() - NZ0 + 1),dtype=np.bool)

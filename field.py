@@ -51,6 +51,7 @@ class Field(object):
         #Return only the largest.
         return Entity(np.where(labeled == volumes.argmax()+1))
 
+
     def label_lt_largest(self, thres):
         """
         Extracts all the connected entities from the flow. Lower than
