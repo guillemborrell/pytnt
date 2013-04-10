@@ -41,8 +41,8 @@ if __name__ == '__main__':
         avg[j-1] = field.data[:,j,:].mean()
 
     pylab.contour(x,field.ydelta[1:],np.log10(pdf),12, linewidths=2)
-    plot(field.ydelta**(-0.5),field.ydelta,'k--',linewidth=2)
-    plot(avg,field.ydelta[1:],'k-',linewidth=2)
+    pylab.plot(field.ydelta**(-0.5),field.ydelta,'k--',linewidth=2)
+    pylab.plot(avg,field.ydelta[1:],'k-',linewidth=2)
 
     field = VorticityComponentField(
         np.abs(f.root.w_z[OFFSET:OFFSET+NX,:NY,:NZ]),
@@ -53,7 +53,7 @@ if __name__ == '__main__':
     for j in range(1,NY):
         avg[j-1] = field.data[:,j,:].mean()
 
-    plot(avg,field.ydelta[1:],'k-',linewidth=2)
+    pylab.plot(avg,field.ydelta[1:],'k-',linewidth=2)
 
     field = VorticityComponentField(
         np.abs(f.root.w_x[OFFSET:OFFSET+NX,:NY,:NZ]),
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     for j in range(1,NY):
         avg[j-1] = field.data[:,j,:].mean()
 
-    plot(avg,field.ydelta[1:],'k-',linewidth=2)
+    pylab.plot(avg,field.ydelta[1:],'k-',linewidth=2)
 
 
     ax = pylab.gca()
