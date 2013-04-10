@@ -15,7 +15,7 @@ if __name__ == '__main__':
     NX0 = f.root.NX0.read()
     OFFSET = 50
     NX = 600
-    NY = 400
+    NY = 500
     NZ = 3500
 
     field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
@@ -29,7 +29,7 @@ if __name__ == '__main__':
     for thres in thresholds:
         print(thres)
         clk = time.clock()
-        hists.append(field.ball_distance_histogram(thres,200,10000000,150))
+        hists.append(field.ball_distance_histogram(thres,200,20000000,150))
         print("distance computations took",time.clock()-clk,"seconds")
         
     f.close()
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     NX0 = f.root.NX0.read()
     OFFSET = 50
     NX = 600
-    NY = 400
+    NY = 500
     NZ = 3500
 
     field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     for thres in thresholds:
         print(thres)
         clk = time.clock()
-        hists.append(field.ball_distance_histogram(thres,200,10000000,150))
+        hists.append(field.ball_distance_histogram(thres,200,20000000,150))
         print("distance computations took",time.clock()-clk,"seconds")
         
     f.close()
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     NX0 = f.root.NX0.read()
     OFFSET = 50
     NX = 600
-    NY = 400
+    NY = 500
     NZ = 3500
 
     field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     for thres in thresholds:
         print(thres)
         clk = time.clock()
-        hists.append(field.ball_distance_histogram(thres,200,10000000,150))
+        hists.append(field.ball_distance_histogram(thres,200,20000000,150))
         print("distance computations took",time.clock()-clk,"seconds")
         
     f.close()

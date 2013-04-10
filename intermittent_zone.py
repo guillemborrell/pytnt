@@ -48,7 +48,7 @@ if __name__ == '__main__':
     NX0 = f.root.NX0.read()
     OFFSET = 50
     NX = 600
-    NY = 550
+    NY = 530
     NZ = 3500
 
     Retau1000 = list()
@@ -85,7 +85,7 @@ if __name__ == '__main__':
     NX0 = f.root.NX0.read()
     OFFSET = 50
     NX = 600
-    NY = 550
+    NY = 530
     NZ = 3500
 
     Retau1500 = list()
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     NX0 = f.root.NX0.read()
     OFFSET = 50
     NX = 600
-    NY = 550
+    NY = 530
     NZ = 3500
 
     Retau2000 = list()

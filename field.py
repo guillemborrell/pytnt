@@ -34,13 +34,21 @@ class Field(object):
         Extracts all the connected entities from the flow. Higher than
         the threshold. Fast.
         """
-        labeled, nsurf = label(self.data > thres)
-
+        #First, get the largest complimentary structure.
+        labeled, nsurf = label(self.data < thres)
         volumes = np.empty((nsurf,), dtype=np.int)
 
         for obj, objnum in zip(find_objects(labeled), range(nsurf)):
             volumes[objnum] = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
 
+        #Now, label the not(the large complimentary)
+        labeled, nsurf = label(np.bitwise_not(labeled == volumes.argmax()+1))
+        volumes = np.empty((nsurf,), dtype=np.int)
+        
+        for obj, objnum in zip(find_objects(labeled), range(nsurf)):
+            volumes[objnum] = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
+        
+        #Return only the largest.
         return Entity(np.where(labeled == volumes.argmax()+1))
 
     def label_lt_largest(self, thres):
@@ -48,13 +56,21 @@ class Field(object):
         Extracts all the connected entities from the flow. Lower than
         the threshold
         """
-        labeled, nsurf = label(self.data < thres)
-
+        #First, get the largest complimentary structure.
+        labeled, nsurf = label(self.data > thres)
         volumes = np.empty((nsurf,), dtype=np.int)
 
         for obj, objnum in zip(find_objects(labeled), range(nsurf)):
             volumes[objnum] = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
 
+        #Now, label the not(the large complimentary)
+        labeled, nsurf = label(np.bitwise_not(labeled == volumes.argmax()+1))
+        volumes = np.empty((nsurf,), dtype=np.int)
+        
+        for obj, objnum in zip(find_objects(labeled), range(nsurf)):
+            volumes[objnum] = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
+        
+        #Return only the largest.
         return Entity(np.where(labeled == volumes.argmax()+1))
 
 

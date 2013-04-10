@@ -19,28 +19,29 @@ if __name__ == '__main__':
     NX = 600
     NY = 400
     NZ = 3500
-    NDIST = 100
+    NDIST = 200
 
     field = VorticityMagnitudeField(
         f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],
         st,NX0+OFFSET)
     field.scale_outer()
     pdf = np.zeros((NY-1,NDIST),np.double)
-    bins = np.logspace(np.log10(field.data.min()),
+    bins = np.linspace(np.log10(field.data.min()),
                        np.log10(field.data.max()),
                        NDIST+1)
     avg = np.zeros((NY-1,),np.double)
     dx = np.diff(bins)
 
     for j in range(1,NY):
-        h,x = np.histogram(field.data[:,j,:],
+        h,x = np.histogram(np.log10(field.data[:,j,:]),
                            bins = bins)
         x = x[1:]
-        norm = np.trapz(h,x)
-        pdf[j-1,:] = h.astype(np.double)/(norm*dx)*x
+        norm = np.trapz(10**x*h,x)
+        pdf[j-1,:] = h.astype(np.double)/norm*10**x
         avg[j-1] = field.data[:,j,:].mean()
+        print(pdf[j-1,:])
 
-    pylab.contour(x,field.ydelta[1:],np.log10(pdf),12, linewidths=2)
+    pylab.contour(10**x,field.ydelta[1:],np.log(pdf),12, linewidths=2)
     pylab.plot(field.ydelta**(-0.5),field.ydelta,'k--',linewidth=2)
     pylab.plot(avg,field.ydelta[1:],'k-',linewidth=2)
 
