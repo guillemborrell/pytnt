@@ -21,7 +21,7 @@ if __name__ == '__main__':
     print(st.Retau()[NX0])
     field.scale_outer()
     print(field.data.min(),field.data.max(),field.scale_factor_outer())
-    thresholds = np.logspace(-1.33,0.33,20)
+    thresholds = np.logspace(-2,0.33,20)
     Retau650.append(thresholds)
     Retau650.append(field.ydelta)
     for thres in thresholds:
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     print(st.Retau(NX0+OFFSET+NX//2))
     field.scale_outer()
     print(field.data.min(),field.data.max())
-    thresholds = np.logspace(-1.33,0.33,20)
+    thresholds = np.logspace(-2,0.33,20)
     Retau1000.append(thresholds)
     Retau1000.append(field.ydelta)
     for thres in thresholds:
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     print(st.Retau(NX0+OFFSET+NX//2))
     field.scale_outer()
     print(field.data.min(),field.data.max())
-    thresholds = np.logspace(-1.33,0.33,20)
+    thresholds = np.logspace(-2,0.33,20)
     Retau1500.append(thresholds)
     Retau1500.append(field.ydelta)
     for thres in thresholds:
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     print(st.Retau(NX0+OFFSET+NX//2))
     field.scale_outer()
     print(field.data.min(),field.data.max())
-    thresholds = np.logspace(-1.33,0.33,20)
+    thresholds = np.logspace(-2,0.33,20)
     Retau2000.append(thresholds)
     Retau2000.append(field.ydelta)
     for thres in thresholds:

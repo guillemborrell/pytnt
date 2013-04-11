@@ -7,7 +7,6 @@ import pickle
 import pylab
 
 if __name__ == '__main__':
-    pylab.clf()
     FILENAME = '/data4/guillem/distances/intermittency_characteristics.pickle.dat'
     f = tables.openFile('/data4/guillem/distances/tbl2-HR-Prod.212.real.2000.h5')
     st = MiniStats('/data4/guillem/distances/tbl2-059-271.st.h5',rough=False)
@@ -41,6 +40,10 @@ if __name__ == '__main__':
         avg[j-1] = field.data[:,j,:].mean()
         print(pdf[j-1,:])
 
+
+    fig = figure(1)
+    pylab.clf()
+
     pylab.contour(10**x,field.ydelta[1:],np.log(pdf),12, linewidths=2)
     pylab.plot(field.ydelta**(-0.5),field.ydelta,'k--',linewidth=2)
     pylab.plot(avg,field.ydelta[1:],'k-',linewidth=2)
@@ -66,8 +69,6 @@ if __name__ == '__main__':
         avg[j-1] = field.data[:,j,:].mean()
 
     pylab.plot(avg,field.ydelta[1:],'k-',linewidth=2)
-
-
     ax = pylab.gca()
     ax.set_xscale('log')
     ax.set_yscale('log')
@@ -77,6 +78,7 @@ if __name__ == '__main__':
     
     pylab.xlabel(r'$\omega^*$',fontsize=22)
     pylab.ylabel(r'$y/\delta_{99}$', fontsize=22)
+    fig.subplots_adjust(bottom=0.15)
     pylab.savefig('ensprofile.svg')
     pylab.show()
     
