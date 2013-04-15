@@ -108,7 +108,7 @@ class MiniStats(object):
 
     def delta99(self,i=False):
         if i:
-            uint = interpolate.interp1d(self.ua[i, :].flatten(), self.yr)
+            uint = interpolate.interp1d(self.ua[int(i), :].flatten(), self.yr)
             return uint(0.99)
         else:
             res = np.empty((self.NX,))

@@ -29,11 +29,13 @@ if __name__ == '__main__':
     for thres in thresholds:
         print(thres)
         clk = time.clock()
-        hists.append(field.ball_distance_histogram(thres,200,20000000,150))
+        hists.append(field.ball_distance_histogram(thres,200,5000000,150))
         print("distance computations took",time.clock()-clk,"seconds")
         
     f.close()
     st.close()
+
+    Results.append(hists)
 
     #######
     f = tables.openFile('/data4/guillem/distances/tbl2-HR-Prod.212.real.7000.h5')
@@ -57,11 +59,13 @@ if __name__ == '__main__':
     for thres in thresholds:
         print(thres)
         clk = time.clock()
-        hists.append(field.ball_distance_histogram(thres,200,20000000,150))
+        hists.append(field.ball_distance_histogram(thres,200,5000000,150))
         print("distance computations took",time.clock()-clk,"seconds")
         
     f.close()
     st.close()
+
+    Results.append(hists)
 
     #######
     f = tables.openFile('/data4/guillem/distances/tbl2-HR-Prod.212.real.14000.h5')
@@ -85,7 +89,7 @@ if __name__ == '__main__':
     for thres in thresholds:
         print(thres)
         clk = time.clock()
-        hists.append(field.ball_distance_histogram(thres,200,20000000,150))
+        hists.append(field.ball_distance_histogram(thres,200,5000000,150))
         print("distance computations took",time.clock()-clk,"seconds")
         
     f.close()
@@ -93,7 +97,7 @@ if __name__ == '__main__':
 
     Results.append(hists)
         
-    resfile = open('/data4/guillem/distances/histogram_ball_outer.1000.dat','w')
+    resfile = open('/data4/guillem/distances/histogram_ball_outer_all.dat','w')
     pickle.dump(Results,resfile)
     resfile.close()
 

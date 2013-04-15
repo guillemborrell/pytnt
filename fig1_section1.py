@@ -19,80 +19,51 @@ if __name__ == '__main__':
     NY = 400
     NZ = 3500
 
-    field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
+    field = VorticityMagnitudeField(
+        f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
     field.scale_outer()
-    h,x = np.histogram(field.data[:,1:,:],
-                       bins=np.logspace(np.log10(field.data.min()),
-                                        np.log10(field.data.max()),
-                                        100))
-    dx = np.diff(x)
+    h,x = np.histogram(np.log10(field.data[:,1:,:]),bins=100)
     x = x[1:]
-    norm = np.trapz(x*h/dx,x)
+    norm = np.trapz(h,x)
 
     fig = pylab.figure(1)
     pylab.clf()
-    pylab.semilogx(x,h.astype(np.double)/(norm*dx)*x,'b-',
+    pylab.semilogx(10**x,h.astype(np.double)/norm,'b-',
                    linewidth=2,label=r'$|\omega|^*$')
 
-    fig2 = pylab.figure(2)
-    pylab.clf()
-    pylab.loglog(x,h.astype(np.double)/(norm*dx),'b-',
-                 linewidth=2,label=r'$|\omega|^*$')
     
-    field = VorticityComponentField(np.abs(f.root.w_z[OFFSET:OFFSET+NX,:NY,:NZ]),
-                                    st,NX0+OFFSET)
+    field = VorticityComponentField(
+        np.abs(f.root.w_z[OFFSET:OFFSET+NX,:NY,:NZ]),st,NX0+OFFSET)
     field.scale_outer()
-    h,x = np.histogram(field.data[:,1:,:],
-                       bins=np.logspace(np.log10(field.data.min()),
-                                        np.log10(field.data.max()),
-                                        100))
-    dx = np.diff(x)
+    h,x = np.histogram(np.log10(field.data[:,1:,:]),
+                       bins=100)
     x = x[1:]
-    norm = np.trapz(x*h/dx,x)
-
+    norm = np.trapz(h,x)
+    
     pylab.figure(1)
-    pylab.semilogx(x,h.astype(np.double)/(norm*dx)*x,'k--',
+    pylab.semilogx(10**x,h.astype(np.double)/norm,'k--',
                    linewidth=2,label=r'$\omega_z^*$')
-    pylab.figure(2)
-    pylab.loglog(x,h.astype(np.double)/(norm*dx),'k--',
-                 linewidth=2,label=r'$\omega_z^*$')
 
 
     field = VorticityComponentField(np.abs(f.root.w_x[OFFSET:OFFSET+NX,:NY,:NZ]),
                                     st,NX0+OFFSET)
     field.scale_outer()
-    h,x = np.histogram(field.data[:,1:,:],
-                       bins=np.logspace(np.log10(field.data.min()),
-                                        np.log10(field.data.max()),
-                                        100))
+    h,x = np.histogram(np.log10(field.data[:,1:,:]),
+                       bins=100)
 
-    dx = np.diff(x)
     x = x[1:]
-    norm = np.trapz(x*h/dx,x)
+    norm = np.trapz(h,x)
     pylab.figure(1)
-    pylab.semilogx(x,h.astype(np.double)/(norm*dx)*x,'r-.',
+    pylab.semilogx(10**x,h.astype(np.double)/norm,'r-.',
                    linewidth=2,label=r'$\omega_x^*$')
-    pylab.figure(2)
-    pylab.loglog(x,h.astype(np.double)/(norm*dx),'r-.',
-                 linewidth=2,label=r'$\omega_x^*$')
 
     pylab.figure(1)
     pylab.xlim([1E-4,50])
     #pylab.ylim([1E-4,1E4])
     pylab.legend(loc='best')
     pylab.xlabel(r'$\omega^*$',fontsize=22)
-    pylab.ylabel(r'$\omega^*P(\omega^*)$',fontsize=22)
+    pylab.ylabel(r'$P(\omega^*dB)$',fontsize=22)
     fig.subplots_adjust(bottom=0.15)
     pylab.savefig('fig1sec1.svg')
-
-    pylab.figure(2)
-    pylab.xlim([1E-4,50])
-    pylab.ylim([1E-5,1E3])
-    pylab.legend(loc='best')
-    pylab.xlabel(r'$\omega^*$',fontsize=22)
-    pylab.ylabel(r'$P(\omega^*)$',fontsize=22)
-    fig2.subplots_adjust(bottom=0.15)
-    pylab.savefig('fig1bissec1.svg')
-
 
     pylab.show()

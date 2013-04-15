@@ -1,3 +1,5 @@
+from __future__ import division, print_function
+
 from field import Field
 from itertools import product
 from scipy import interpolate
@@ -92,7 +94,8 @@ class VorticityMagnitudeField(Field):
         NX0 = self.NX0
         NX = self.data.shape[0]
         h = np.where(self.stats.ydelta(NX0 + NX/2) > height)[0][0]
-        np.sqrt(5*(
+
+        return np.sqrt(5*(
             self.stats.us[NX0 + NX/2, h]**2 +
             self.stats.vs[NX0 + NX/2, h]**2 +
             self.stats.ws[NX0 + NX/2, h]**2
@@ -100,12 +103,11 @@ class VorticityMagnitudeField(Field):
             self.stats.Re * self.stats.utau[NX0 + NX/2]**4)
         )
 
-    def vertical_distance_profile(self, thres):
+    def vertical_distance_profile(self, thres, RANGE=0.5):
         """
         Vertical distance profile since first detection of the threshold.
         This is the usual method found in the bibliography.
         """
-        RANGE = 0.5
         NX = self.data.shape[0]
         NZ = self.data.shape[2]
 
@@ -122,7 +124,7 @@ class VorticityMagnitudeField(Field):
             itp = interpolate.interp1d(yr-yloc,data)
             acc[:] = acc[:] + itp(ogrid)
     
-        return acc/NX/NZ
+        return ogrid,acc/NX/NZ
 
     def vertical_distance_histogram(self, thres, ybins, xbins):
         """
