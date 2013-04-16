@@ -29,7 +29,7 @@ if __name__ == '__main__':
     for thres in thresholds:
         print(thres)
         clk = time.clock()
-        hists.append(field.ball_distance_histogram(thres,200,5000000,150))
+        hists.append(field.ball_distance_histogram(thres,200,20000000,150))
         print("distance computations took",time.clock()-clk,"seconds")
         
     f.close()
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     for thres in thresholds:
         print(thres)
         clk = time.clock()
-        hists.append(field.ball_distance_histogram(thres,200,5000000,150))
+        hists.append(field.ball_distance_histogram(thres,200,20000000,150))
         print("distance computations took",time.clock()-clk,"seconds")
         
     f.close()
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     for thres in thresholds:
         print(thres)
         clk = time.clock()
-        hists.append(field.ball_distance_histogram(thres,200,5000000,150))
+        hists.append(field.ball_distance_histogram(thres,200,20000000,150))
         print("distance computations took",time.clock()-clk,"seconds")
         
     f.close()

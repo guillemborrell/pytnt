@@ -3,7 +3,7 @@ from __future__ import division, print_function
 from field import Field
 from itertools import product
 from scipy import interpolate
-from lkdtree import distances
+from scipy.spatial import cKDTree
 import numpy as np
 
 
@@ -168,7 +168,8 @@ class VorticityMagnitudeField(Field):
         surface = self.extract_largest_surface(thres)
         voxels = surface.refined_point_list(self)
         trgt, sval = self.generate_target_points(npoints, FRAME)
-        dist = distances(voxels, trgt)
+        t = cKDTree(voxels)
+        dist = t.query(trgt)[0]
         return np.histogram2d(dist, np.log10(sval), bins=nbins)
 
 

@@ -3,6 +3,7 @@ import tables
 import numpy as np
 from scalar_field import VorticityMagnitudeField
 from stats import MiniStats
+import time
 import pickle
 
 if __name__ == '__main__':
@@ -12,7 +13,7 @@ if __name__ == '__main__':
     NX0 = 5000
     NX = 400
     NY = 350
-    NZ = 1000
+    NZ = 400
 
     field = VorticityMagnitudeField(f.root.enstrophy[NX0:NX0+NX,:NY,:NZ],st,NX0)
     print(st.Retau(NX0))
@@ -23,7 +24,9 @@ if __name__ == '__main__':
     hists.append(thresholds)
     for thres in thresholds:
         print(thres)
-        hists.append(field.ball_distance_histogram(thres,200,10000000,30))
+        now = time.clock()
+        hists.append(field.ball_distance_histogram(thres,200,1000000,30))
+        print("run for {} seconds".format(time.clock()-now))
         
     resfile = open('/data4/guillem/distances/histogram_ball_outer.560.dat','w')
     pickle.dump(hists,resfile)
