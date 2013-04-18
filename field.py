@@ -7,6 +7,7 @@ from numpy.random import randint
 
 #imports for testing
 import unittest
+import logging
 from itertools import product
 
 
@@ -125,9 +126,21 @@ class Field(object):
         volumes = np.empty((nsurf,), dtype=np.int)
 
         for obj, objnum in zip(find_objects(labeled), range(nsurf)):
-            volumes[objnum] = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
+            vol = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
+            if vol > labeled.shape[0]*labeled.shape[2]:
+                strides = np.where(labeled == objnum+1)
+                logging.info(
+                    'Found volume {} big. Stopping'.format(len(strides[0])))
+                return Surface(strides, thres)
 
-        return Surface(np.where(labeled == volumes.argmax()+1), thres)
+            volumes[objnum] = vol
+
+        strides = np.where(labeled == volumes.argmax()+1)
+        logging.info(
+            'Found volume {} for {} total'.format(len(strides[0]),
+                                                  np.prod(labeled.shape))
+            )
+        return Surface(strides, thres)
 
     def extract_surfaces_gt(self, thres, nvoxels=27):
         """

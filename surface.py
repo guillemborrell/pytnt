@@ -1,8 +1,15 @@
 import numpy as np
+import logging
+import time
 from itertools import count, izip
 from numpy.random import random
 from entity import Entity
-
+try:
+    from _refine_fast import _refine_point_list
+    REFINE_FAST = True
+except ImportError:
+    REFINE_FAST = False
+    
 
 def refine_voxel(vertices, points, thres):
     """
@@ -44,26 +51,43 @@ class Surface(Entity):
 
         return pnts
 
-    def refined_point_list(self, field, NGUESS=20):
+    def refined_point_list(self, field, NGUESS=20, fast=True):
         """
         Returns the surface as a point list, with refinement, for distance
         computation.
         """
         pnts = np.empty((self.nvox, 3), dtype=np.double)
-        vertices = np.zeros((8, ), dtype=np.float32)
-        res = np.empty((self.nvox, ), dtype=np.double)
+        now = time.clock()
+        if REFINE_FAST and fast:
+            logging.info("Using Cython implementation of surface refining")
+            retval = _refine_point_list(self.nvox,
+                                        self.voxels[0],
+                                        self.voxels[1],
+                                        self.voxels[2],
+                                        field.xr,
+                                        field.yr,
+                                        field.zr,
+                                        field.data,
+                                        pnts,
+                                        random((3, NGUESS)),
+                                        self.thres,
+                                        NGUESS)
+        else:
+            vertices = np.zeros((8, ), dtype=np.float32)
+            res = np.empty((self.nvox, ), dtype=np.double)
 
-        for i, j, k, cursor in izip(self.voxels[0], self.voxels[1], self.voxels[2], count()):
-            dx = field.xr[i+1]-field.xr[i]
-            dz = field.zr[k+1]-field.zr[k]
-            dy = field.yr[j+1]-field.yr[j]
+            for i, j, k, cursor in izip(self.voxels[0], self.voxels[1], self.voxels[2], count()):
+                dx = field.xr[i+1]-field.xr[i]
+                dz = field.zr[k+1]-field.zr[k]
+                dy = field.yr[j+1]-field.yr[j]
+                
+                vertices[:] = field.data[i:i+2, j:j+2, k:k+2].flatten()
+                
+                guess = random((3, NGUESS))
+                opt, res[cursor] = refine_voxel(vertices, guess, self.thres)
+                pnts[cursor, 0] = opt[0]*dx + field.xr[i]
+                pnts[cursor, 1] = opt[1]*dy + field.yr[j]
+                pnts[cursor, 2] = opt[2]*dz + field.zr[k]
 
-            vertices[:] = field.data[i:i+2, j:j+2, k:k+2].flatten()
-
-            guess = random((3, NGUESS))
-            opt, res[cursor] = refine_voxel(vertices, guess, self.thres)
-            pnts[cursor, 0] = opt[0]*dx + field.xr[i]
-            pnts[cursor, 1] = opt[1]*dy + field.yr[j]
-            pnts[cursor, 2] = opt[2]*dz + field.zr[k]
-
+        logging.info('Refining took {} s.'.format(time.clock()-now))
         return pnts

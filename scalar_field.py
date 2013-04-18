@@ -4,6 +4,8 @@ from field import Field
 from itertools import product
 from scipy import interpolate
 from scipy.spatial import cKDTree
+import logging
+import time
 import numpy as np
 
 
@@ -168,9 +170,16 @@ class VorticityMagnitudeField(Field):
         surface = self.extract_largest_surface(thres)
         voxels = surface.refined_point_list(self)
         trgt, sval = self.generate_target_points(npoints, FRAME)
+        now = time.clock()
         t = cKDTree(voxels)
+        logging.info('Building the tree took {} s.'.format(time.clock()-now))
+        now = time.clock()
         dist = t.query(trgt)[0]
-        return np.histogram2d(dist, np.log10(sval), bins=nbins)
+        logging.info('Distances took {} s'.format(time.clock()-now))
+        now = time.clock()
+        res = np.histogram2d(dist, np.log10(sval), bins=nbins)
+        logging.info('Histogram {} s'.format(time.clock()-now))
+        return res
 
 
 class VorticityComponentField(VorticityMagnitudeField):

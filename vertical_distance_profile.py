@@ -8,6 +8,7 @@ import pylab
 
 if __name__ == '__main__':
     stages = ['2000','7000','14000']
+    threslist =  np.logspace(-2,-0.3,10)
     for stage in stages:
         print('Stage {}...'.format(stage))
         f = tables.openFile(
@@ -30,23 +31,27 @@ if __name__ == '__main__':
         ogrid, ydist = field.vertical_distance_profile(0.1,RANGE=4)
         f = figure(1)
         plot(ogrid/field.kolmogorov_length_at_height(0.6),ydist,linewidth=2,label=stage)
+
+        f = figure(2)
+        plot(ogrid/field.taylor_microscale_at_height(0.6),ydist,linewidth=2,label=stage)
+
+        f = figure(3)
+        plot(ogrid/st.delta99(NX0+NX/2),ydist,linewidth=2,label=stage)
+
+        figure(1)
         xlabel(r'$d/\eta$',fontsize=22)
         ylabel(r'$\omega^*$',fontsize=22)
         f.subplots_adjust(bottom=0.15)
         savefig('vertical_distance_eta.svg')
 
-        f = figure(2)
-        plot(ogrid/field.taylor_microscale_at_height(0.6),ydist,linewidth=2,label=stage)
+        figure(2)
         xlabel(r'$d/\lambda$',fontsize=22)
         ylabel(r'$\omega^*$',fontsize=22)
         f.subplots_adjust(bottom=0.15)
         savefig('vertical_distance_lambda.svg')
-
-
-        f = figure(3)
-        plot(ogrid/st.delta99(NX0+NX/2),ydist,linewidth=2,label=stage)
+        
+        figure(3)
         xlabel(r'$d/\delta_{99}$',fontsize=22)
         ylabel(r'$\omega^*$',fontsize=22)
         f.subplots_adjust(bottom=0.15)
         savefig('vertical_distance_delta.svg')
-
