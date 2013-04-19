@@ -119,14 +119,19 @@ class VorticityMagnitudeField(Field):
         ogrid = np.linspace(-RANGE,RANGE,100)
         acc = np.zeros((100,),dtype=np.float64)
         data = np.zeros((len(yr),),dtype=np.float32)
+        
+        nstops = 0
 
         for i,k in product(range(NX),range(NZ)):
             data[:] = self.data[i,::-1,k] 
             yloc = yr[np.where(data>thres)[0][0]]
             itp = interpolate.interp1d(yr-yloc,data)
-            acc[:] = acc[:] + itp(ogrid)
+            try:
+                acc[:] = acc[:] + itp(ogrid)
+            except ValueError:
+                nstops += 1
     
-        return ogrid,acc/NX/NZ
+        return ogrid,acc/(NX*NZ-nstops)
 
     def vertical_distance_histogram(self, thres, ybins, xbins):
         """
