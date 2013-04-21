@@ -9,6 +9,8 @@ setup(
     ext_modules = [Extension("_refine_fast",
                              ["_refine_point_list.pyx"],
                              extra_compile_args=['-fopenmp'],
-                             extra_link_args=['-fopenmp'],)],
+                             extra_link_args=['-fopenmp'],),
+                   Extension("_histogram3d",
+                             ["_histogram3d.pyx"])],
     include_dirs = ['/opt/epd-7.3-1-rh5-x86_64/lib/python2.7/site-packages/numpy/core/include']
     )

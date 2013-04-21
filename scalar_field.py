@@ -7,6 +7,7 @@ from scipy.spatial import cKDTree
 import logging
 import time
 import numpy as np
+from histogram3 import histogram3
 
 
 class VorticityMagnitudeField(Field):
@@ -183,6 +184,28 @@ class VorticityMagnitudeField(Field):
         logging.info('Distances took {} s'.format(time.clock()-now))
         now = time.clock()
         res = np.histogram2d(dist, np.log10(sval), bins=nbins)
+        logging.info('Histogram {} s'.format(time.clock()-now))
+        return res
+
+    def ball_distance_histogram_height(self, thres, bins=False, npoints=1000000, FRAME=100):
+        """
+        Minimum ball distance co histogram with the magnitude of the
+        field and the relative height respect to the wall
+        """
+        surface = self.extract_largest_surface(thres)
+        voxels = surface.refined_point_list(self)
+        trgt, sval, height = self.generate_target_points(npoints, FRAME, HEIGHT=True)
+        now = time.clock()
+        t = cKDTree(voxels)
+        logging.info('Building the tree took {} s.'.format(time.clock()-now))
+        now = time.clock()
+        dist = t.query(trgt)[0]
+        logging.info('Distances took {} s'.format(time.clock()-now))
+        now = time.clock()
+        res = np.histogram3(np.array([dist, np.log10(sval), height]),
+                            bins[0],
+                            bins[1],
+                            bins[2])
         logging.info('Histogram {} s'.format(time.clock()-now))
         return res
 

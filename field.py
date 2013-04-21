@@ -157,7 +157,7 @@ class Field(object):
 
         return new_surface_list
 
-    def generate_target_points(self, NUM, OFFSET):
+    def generate_target_points(self, NUM, OFFSET, HEIGHT=False):
         """
         Returns NUM random samplessamples, framed with OFFSET, from
         the field. For distance computation.
@@ -168,19 +168,32 @@ class Field(object):
         # print "...Framed shape", nx, ny, nz
         trgt = np.empty((NUM, 3), dtype=np.double)
         sval = np.empty((NUM,), dtype=np.double)
+        if HEIGHT:
+            height = np.empty((NUM,), dtype=np.double)
 
         guessi = OFFSET + randint(0, nx-1, size=NUM)
         guessj = randint(0, ny-1, size=NUM)
         guessk = OFFSET + randint(0, nz-1, size=NUM)
-
-        for n in range(NUM):
-            trgt[n, 0] = self.xr[guessi[n]]
-            trgt[n, 1] = self.yr[guessj[n]]
-            trgt[n, 2] = self.zr[guessk[n]]
-            sval[n] = self.data[guessi[n], guessj[n], guessk[n]]
-
-        return trgt, sval
-
+        
+        if HEIGHT:
+            for n in range(NUM):
+                trgt[n, 0] = self.xr[guessi[n]]
+                trgt[n, 1] = self.yr[guessj[n]]
+                trgt[n, 2] = self.zr[guessk[n]]
+                sval[n] = self.data[guessi[n], guessj[n], guessk[n]]
+                height[n] = self.yr[guessj[n]]
+            
+        else:
+            for n in range(NUM):
+                trgt[n, 0] = self.xr[guessi[n]]
+                trgt[n, 1] = self.yr[guessj[n]]
+                trgt[n, 2] = self.zr[guessk[n]]
+                sval[n] = self.data[guessi[n], guessj[n], guessk[n]]
+            
+        if HEIGHT:
+            return trgt, sval, height
+        else:
+            return trgt, sval
 
 class TestField(unittest.TestCase):
     """
@@ -195,7 +208,7 @@ class TestField(unittest.TestCase):
         xgrid = np.linspace(-2, 2, N)
         ygrid = np.linspace(-2, 2, N)
         zgrid = np.linspace(-2, 2, N)
-        domain = np.empty((N, N, N), dtype=np.double)
+        domain = np.empty((N, N, N), dtype=np.float32)
         for i, j, k in product(range(N), range(N), range(N)):
             domain[i, j, k] = np.sqrt(xgrid[i]**2 + ygrid[j]**2 + zgrid[k]**2)
 
