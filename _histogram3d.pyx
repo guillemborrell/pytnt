@@ -1,14 +1,14 @@
 cimport numpy as np
 
-cpdef _histogram3(np.ndarray[float, ndim=2] data,
-                  long ndata,
-                  np.ndarray[double, ndim=1] binsx,
-                  long nbinsx,
-                  np.ndarray[double, ndim=1] binsy,
-                  long nbinsy,
-                  np.ndarray[double, ndim=1] binsz,
-                  long nbinsz,
-                  np.ndarray[long, ndim=3] hist):
+cpdef _histogram3d(np.ndarray[float, ndim=2] data,
+                   long ndata,
+                   np.ndarray[double, ndim=1] binsx,
+                   long nbinsx,
+                   np.ndarray[double, ndim=1] binsy,
+                   long nbinsy,
+                   np.ndarray[double, ndim=1] binsz,
+                   long nbinsz,
+                   np.ndarray[long, ndim=3] hist):
     """
     Compute a 3d histogram. The fast way. It is slightly different
     from the traditional histogram, because it adds two extra bins at

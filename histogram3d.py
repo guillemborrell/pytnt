@@ -1,28 +1,29 @@
 from __future__ import print_function
 import numpy as np
-try:
-    from _histogram3d import _histogram3d
-except ImportError:
-    print('Fast histogram not available')
+# try:
+#     from _histogram3d import _histogram3d
+# except ImportError:
+#     print('Fast histogram not available')
+from _histogram3d import _histogram3d
 import unittest
 
 
 class histogram3d(object):
-    def __init__(self,binsx, binsy=False, binsz=False):
+    def __init__(self,binsx, binsy=None, binsz=None):
         self.binsx = binsx.astype(np.double)
         self.nbinsx = len(binsx)
 
-        if binsy:
+        try:
             self.binsy = binsy.astype(np.double)
             self.nbinsy = len(binsy)
-        else:
+        except:
             self.binsy = self.binsx.copy()
             self.nbinsy = self.nbinsx
 
-        if binsz:
+        try:
             self.binsz = binsz.astype(np.double)
             self.nbinsz = len(binsz)
-        else:
+        except:
             self.binsz = self.binsx.copy()
             self.nbinsz = self.nbinsx
 
@@ -35,7 +36,7 @@ class histogram3d(object):
             raise ValueError('This is a 3d histogram, data must be a (3,N) array')
 
         N = data.shape[1]
-        _histogram3(data.astype(np.float32),
+        _histogram3d(data.astype(np.float32),
                     N,
                     self.binsx,
                     self.nbinsx,
@@ -44,18 +45,21 @@ class histogram3d(object):
                     self.binsz,
                     self.nbinsz,
                     self.hist)
+        
+    def serialize(self):
+        return (self.hist, self.binsx, self.binsy, self.binsz)
 
 
 class TestHistogram3(unittest.TestCase):
     def test_creation(self):
         binsx = np.arange(0,1,10)
-        hist = histogram3(binsx)
-        hist = histogram3(binsx,binsx,binsx)
+        hist = histogram3d(binsx)
+        hist = histogram3d(binsx,binsx,binsx)
         self.assertEqual(binsx, hist.binsz)
     
     def test_increment(self):
         data = np.random.rand(3,100)
-        hist = histogram3(np.arange(0,1,10))
+        hist = histogram3d(np.arange(0,1,10))
         hist.increment(data)
 
         self.assertTrue(True, True)

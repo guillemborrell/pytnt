@@ -140,36 +140,61 @@ class VorticityMagnitudeField(Field):
         compute the vertical distances or to analyze the interface in
         a glance.
         """
-        RANGE = 0.1
         NX = self.data.shape[0]
         NY = self.data.shape[1]
         NZ = self.data.shape[2]
 
         yr = self.yr.copy()[::-1]
         yr[:] = -(yr[:]-yr[0])
-        ogrid = np.linspace(-RANGE, RANGE, 32)
-        acc = np.zeros((32,), dtype=np.float64)
         data = np.zeros((len(yr),),dtype=np.float32)
-        height_map = np.empty((NX, NZ), dtype=np.float64)
-
-        singularities = list()
+        height_map = np.zeros((NX, NZ), dtype=np.float64)
 
         for i, k in product(range(NX), range(NZ)):
             data[:] = self.data[i,::-1,k]
-            yloc = yr[np.where(data > thres)[0][0]]
-            itp = interpolate.interp1d(yr-yloc, data)
-            acc[:] = itp(ogrid)
-            try:
-                height_map[i, k] = -ogrid[np.where(acc > thres)[0][0]] - yloc + yr[-1]
-            except IndexError:
-                singularities.append((i,k))
+            ylocidx = np.where(data > thres)[0][0]
+            datab = -(data[ylocidx]-thres)
+            ylocb = yr[ylocidx]
+            datat = data[ylocidx-1]-thres
+            yloct = yr[ylocidx-1]
+            height_map[i, k] = (yloct*datat + ylocb*datab)/(datab + datat)
 
-        #Fix weird points by interpolating, assuming that those weird
-        #points are very unlikely
-        for i, k in singularities:
-            height_map[i,k] = height_map[i-1,k-1]
+        return yr[-1]-height_map
 
-        return height_map
+    def vertical_distance_histogram3d(self, thres, nbins=200):
+        """
+        3D histogram of the magnitude, the vertical distance to the
+        surface, and the vertical distance to the wall.
+        """
+        hmap = self.interface_height_map(thres)
+        NX = self.data.shape[0]
+        NY = self.data.shape[1]
+        NZ = self.data.shape[2]
+
+        #Project the bins
+        #Bins for the magnitude
+        minmag = np.log10(self.data.min())
+        maxmag = np.log10(self.data.max())
+        binsmag = np.linspace(minmag, maxmag, nbins)
+
+        #Bins for distance to the surface
+        mindist = 0.0
+        maxdist = np.max(np.abs(np.array([self.yr[-1]-hmap.min(), hmap.max()])))
+        binsdist = np.linspace(mindist, maxdist, nbins)
+
+        #Bins for distance to the wall
+        minheight = 0.0
+        maxheight = self.yr[-1]
+        binsheight = np.linspace(minheight, maxheight, nbins)
+        
+        histogram = histogram3d(binsmag, binsdist, binsheight)
+
+        for i,k in product(range(NX), range(NZ)):
+            histdata = np.array([np.log10(self.data[i,:,k]),
+                                 np.abs(self.yr-hmap[i,k]),
+                                 self.yr])
+            histogram.increment(histdata)
+            
+        return histogram
 
     def ball_distance_histogram(self, thres, nbins=200, npoints=1000000, FRAME=100):
         """
@@ -204,10 +229,10 @@ class VorticityMagnitudeField(Field):
         dist = t.query(trgt)[0]
         logging.info('Distances took {} s'.format(time.clock()-now))
         now = time.clock()
-        res = np.histogram3(np.array([dist, np.log10(sval), height]),
-                            bins[0],
-                            bins[1],
-                            bins[2])
+        res = np.histogram3d(np.array([np.log10(sval), dist, height]),
+                             bins[0],
+                             bins[1],
+                             bins[2])
         logging.info('Histogram {} s'.format(time.clock()-now))
         return res
 

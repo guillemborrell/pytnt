@@ -33,6 +33,7 @@ if __name__ == '__main__':
 
         for thres in threslist[:1]:
             hmap = field.interface_height_map(thres)
+            print(hmap)
             f = figure(s)
-            pylab.imshow(hmap)
+            pylab.imshow(hmap,cmap=cm.prism)
     
