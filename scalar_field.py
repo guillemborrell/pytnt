@@ -7,7 +7,7 @@ from scipy.spatial import cKDTree
 import logging
 import time
 import numpy as np
-from histogram3 import histogram3
+from histogram3d import histogram3d
 
 
 class VorticityMagnitudeField(Field):
@@ -134,9 +134,11 @@ class VorticityMagnitudeField(Field):
     
         return ogrid,acc/(NX*NZ-nstops)
 
-    def vertical_distance_histogram(self, thres, ybins, xbins):
+    def interface_height_map(self, thres):
         """
-        Vertical distance histogram from the first vertical detection.
+        Computes the height map of the interface. Useful to further
+        compute the vertical distances or to analyze the interface in
+        a glance.
         """
         RANGE = 0.1
         NX = self.data.shape[0]
@@ -145,29 +147,29 @@ class VorticityMagnitudeField(Field):
 
         yr = self.yr.copy()[::-1]
         yr[:] = -(yr[:]-yr[0])
-        ogrid = np.linspace(-RANGE, RANGE, 100)
-        acc = np.zeros((100,), dtype=np.float64)
+        ogrid = np.linspace(-RANGE, RANGE, 32)
+        acc = np.zeros((32,), dtype=np.float64)
         data = np.zeros((len(yr),),dtype=np.float32)
         height_map = np.empty((NX, NZ), dtype=np.float64)
 
-        #First thing is to compute the height map
+        singularities = list()
+
         for i, k in product(range(NX), range(NZ)):
             data[:] = self.data[i,::-1,k]
             yloc = yr[np.where(data > thres)[0][0]]
             itp = interpolate.interp1d(yr-yloc, data)
             acc[:] = itp(ogrid)
-            height_map[i, k] = -ogrid[np.where(acc > thres)[0][0]] - yloc + yr[-1]
+            try:
+                height_map[i, k] = -ogrid[np.where(acc > thres)[0][0]] - yloc + yr[-1]
+            except IndexError:
+                singularities.append((i,k))
 
-        # Set histogram up
-        NHISTY = len(ybins)
-        NHISTX = len(xbins)
-        histogram = np.zeros((NHISTY, NHISTX), dtype=np.double)
+        #Fix weird points by interpolating, assuming that those weird
+        #points are very unlikely
+        for i, k in singularities:
+            height_map[i,k] = height_map[i-1,k-1]
 
-        for i, j, k in product(range(NX), range(NY), range(NZ)):
-            histogram[np.where(ybins > self.y[j])[0][0],
-                      np.where(xbins > np.log10(self.data[i, j, k]))[0][0]] += 1.0
-
-        return histogram
+        return height_map
 
     def ball_distance_histogram(self, thres, nbins=200, npoints=1000000, FRAME=100):
         """
@@ -187,7 +189,7 @@ class VorticityMagnitudeField(Field):
         logging.info('Histogram {} s'.format(time.clock()-now))
         return res
 
-    def ball_distance_histogram_height(self, thres, bins=False, npoints=1000000, FRAME=100):
+    def ball_distance_histogram3d(self, thres, bins=False, npoints=1000000, FRAME=100):
         """
         Minimum ball distance co histogram with the magnitude of the
         field and the relative height respect to the wall
