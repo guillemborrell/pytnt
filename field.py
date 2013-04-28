@@ -30,10 +30,32 @@ class Field(object):
     def NZ(self):
         return self.data.shape[2]
 
+    def label_gt_largest_mask(self, thres):
+        """
+        Extracts the largest connected entity from the flow. Returns a
+        mask array.
+        """
+        #First, get the largest complimentary structure.
+        labeled, nsurf = label(self.data < thres)
+        volumes = np.empty((nsurf,), dtype=np.int)
+
+        for obj, objnum in zip(find_objects(labeled), range(nsurf)):
+            volumes[objnum] = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
+
+        #Now, label the not(the large complimentary)
+        labeled, nsurf = label(np.bitwise_not(labeled == volumes.argmax()+1))
+        volumes = np.empty((nsurf,), dtype=np.int)
+        
+        for obj, objnum in zip(find_objects(labeled), range(nsurf)):
+            volumes[objnum] = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
+        
+        #Return only the largest.
+        return labeled == volumes.argmax()+1
+
     def label_gt_largest(self, thres):
         """
-        Extracts all the connected entities from the flow. Higher than
-        the threshold. Fast.
+        Extracts the largest connected entity from the flow. Higher
+        than the threshold. Fast.
         """
         #First, get the largest complimentary structure.
         labeled, nsurf = label(self.data < thres)

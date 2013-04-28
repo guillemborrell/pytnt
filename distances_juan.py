@@ -16,80 +16,39 @@ if __name__ == '__main__':
 
     logging.basicConfig(filename='distances.log',
                         level=logging.INFO)
-    Results = list()
-    
-    f = tables.openFile('/data4/guillem/distances/tbl2-HR-Prod.212.real.2000.h5')
+    Results = list()   
     st = MiniStats('/data4/guillem/distances/tbl2-059-271.st.h5',rough=False)
     st.read()
+    thresholds = np.logspace(-2,-0.3,10)
 
-    NX0 = f.root.NX0.read()
     OFFSET = 50
     NX = 600
-    NY = np.where(st.y > 2*st.delta99(NX0+NX/2))[0][0]
     NZ = 4000
 
-    field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
-
-    field.scale_outer()
-    hists = list()
-
-    thresholds = np.logspace(-2,-0.3,10)
-    hists.append(thresholds)
-    for thres in thresholds:
-        hists.append(field.ball_distance_histogram(thres,200,30000000,150))
+    for stage in ['2000','7000','14000']:
+        print(stage)
+        f = tables.openFile(
+            '/data4/guillem/distances/tbl2-HR-Prod.212.real.{}.h5'.format(stage))
+        NX0 = f.root.NX0.read()
+        NY = np.where(st.y > 2*st.delta99(NX0+NX/2))[0][0]
+        field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
         
-    f.close()
-    st.close()
+        field.scale_outer()
+        hists = list()
 
-    Results.append(hists)
-
-    #######
-    f = tables.openFile('/data4/guillem/distances/tbl2-HR-Prod.212.real.7000.h5')
-    NX0 = f.root.NX0.read()
-    OFFSET = 50
-    NX = 600
-    NY = np.where(st.y > 2*st.delta99(NX0+NX/2))[0][0]
-    NZ = 4000
-
-    field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
-
-    field.scale_outer()
-    hists = list()
-
-    thresholds = np.logspace(-2,-0.3,10)
-    hists.append(thresholds)
-    for thres in thresholds:
-        hists.append(field.ball_distance_histogram(thres,200,30000000,150))
+        hists.append(thresholds)
+        for thres in thresholds:
+            print(thres)
+            hists.append(field.ball_distance_histogram(thres,500,50000000,150))
         
-    f.close()
-    st.close()
+        f.close()
+        Results.append(hists)
 
-    Results.append(hists)
-
-    #######
-    f = tables.openFile('/data4/guillem/distances/tbl2-HR-Prod.212.real.14000.h5')
-    NX0 = f.root.NX0.read()
-    OFFSET = 50
-    NX = 600
-    NY = np.where(st.y > 2*st.delta99(NX0+NX/2))[0][0]
-    NZ = 4000
-
-    field = VorticityMagnitudeField(f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],st,NX0+OFFSET)
-
-    field.scale_outer()
-    hists = list()
-
-    thresholds = np.logspace(-2,-0.3,10)
-    hists.append(thresholds)
-    for thres in thresholds:
-        hists.append(field.ball_distance_histogram(thres,200,30000000,150))
-        
-    f.close()
     st.close()
 
     Results.append(hists)
         
-    resfile = open('/data4/guillem/distances/histogram_ball_outer_big.dat','w')
+    resfile = open('/data4/guillem/distances/histogram_ball.dat','w')
     pickle.dump(Results,resfile)
     resfile.close()
 

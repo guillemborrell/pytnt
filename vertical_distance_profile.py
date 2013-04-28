@@ -7,6 +7,12 @@ import pickle
 import pylab
 
 if __name__ == '__main__':
+    OFFSET = 50
+    NX = 600
+    NY = 500
+    NZ = 2000
+
+    pylab.close("all")
     stages = ['2000','7000','14000']
     threslist =  np.logspace(-2,-0.3,10)
     for stage in stages:
@@ -15,50 +21,46 @@ if __name__ == '__main__':
             '/data4/guillem/distances/tbl2-HR-Prod.212.real.{}.h5'.format(stage))
         st = MiniStats(
             '/data4/guillem/distances/tbl2-059-271.st.h5',rough=False)
-        st.load_budgets('/data4/guillem/distances/tbl2-059-271.budget.h5')
-        
+        st.load_budgets('/data4/guillem/distances/tbl2-059-271.budget.h5')    
         NX0 = f.root.NX0.read()[0]
-        OFFSET = 50
-        NX = 600
-        NY = 500
-        NZ = 600
 
-        # field = VorticityMagnitudeField(
-        #     f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],
-        #     st,NX0+OFFSET)
-        field = VorticityComponentField(np.abs(
-            f.root.w_z[OFFSET:OFFSET+NX,:NY,:NZ]),
+        field = VorticityMagnitudeField(
+            f.root.enstrophy[OFFSET:OFFSET+NX,:NY,:NZ],
             st,NX0+OFFSET)
+        # field = VorticityComponentField(np.abs(
+        #     f.root.w_z[OFFSET:OFFSET+NX,:NY,:NZ]),
+        #     st,NX0+OFFSET)
         field.scale_outer()
 
         for thres in threslist:
-            ogrid, ydist = field.vertical_distance_profile(thres,RANGE=4)
-            f = figure(1)
-            semilogy(ogrid/field.kolmogorov_length_at_height(0.6),
+            print(thres)
+            ydist, ogrid = field.vertical_distance_profile(thres,RANGE=2.0)
+            f = pylab.figure(1)
+            pylab.plot(ogrid/field.kolmogorov_length_at_height(0.6),
+                       ydist,linewidth=1,label=stage)
+            
+            f = pylab.figure(2)
+            pylab.plot(ogrid/field.taylor_microscale_at_height(0.6),
+                       ydist,linewidth=1,label=stage)
+    
+            f = pylab.figure(3)
+            pylab.plot(ogrid/st.delta99(NX0+NX/2),
                      ydist,linewidth=1,label=stage)
     
-            f = figure(2)
-            semilogy(ogrid/field.taylor_microscale_at_height(0.6),
-                     ydist,linewidth=1,label=stage)
-    
-            f = figure(3)
-            semilogy(ogrid/st.delta99(NX0+NX/2),
-                     ydist,linewidth=1,label=stage)
-    
-        figure(1)
-        xlabel(r'$d/\eta$',fontsize=22)
-        ylabel(r'$\omega^*$',fontsize=22)
+        pylab.figure(1)
+        pylab.xlabel(r'$d/\eta$',fontsize=22)
+        pylab.ylabel(r'$\omega^*$',fontsize=22)
         f.subplots_adjust(bottom=0.15)
-        savefig('vertical_distance_eta_log_wz.svg')
+        pylab.savefig('vertical_distance_zoom.svg')
 
-        figure(2)
-        xlabel(r'$d/\lambda$',fontsize=22)
-        ylabel(r'$\omega^*$',fontsize=22)
+        pylab.figure(2)
+        pylab.xlabel(r'$d/\lambda$',fontsize=22)
+        pylab.ylabel(r'$\omega^*$',fontsize=22)
         f.subplots_adjust(bottom=0.15)
-        savefig('vertical_distance_lambda_log_wz.svg')
+        pylab.savefig('vertical_distance_zoom.svg')
         
-        figure(3)
-        xlabel(r'$d/\delta_{99}$',fontsize=22)
-        ylabel(r'$\omega^*$',fontsize=22)
+        pylab.figure(3)
+        pylab.xlabel(r'$d/\delta_{99}$',fontsize=22)
+        pylab.ylabel(r'$\omega^*$',fontsize=22)
         f.subplots_adjust(bottom=0.15)
-        savefig('vertical_distance_delta_log_wz.svg')
+        pylab.savefig('vertical_distance_zoom.svg')

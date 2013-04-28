@@ -33,13 +33,12 @@ cpdef _histogram3d(np.ndarray[float, ndim=2] data,
         i = 0
         j = 0
         k = 0
-
         if binsx[0] > data[0, counter]:
             i = 0
         elif binsx[nbinsx-1] < data[0, counter]:
             i = nbinsx
         else:
-            while binsx[i] > data[0, counter]:
+            while binsx[i] < data[0, counter]:
                 i += 1
 
         if binsy[0] > data[1, counter]:
@@ -47,7 +46,7 @@ cpdef _histogram3d(np.ndarray[float, ndim=2] data,
         elif binsy[nbinsy-1] < data[1, counter]:
             j = nbinsy
         else:
-            while binsy[j] > data[1, counter]:
+            while binsy[j] < data[1, counter]:
                 j += 1
             
         if binsz[0] > data[2, counter]:
@@ -55,7 +54,7 @@ cpdef _histogram3d(np.ndarray[float, ndim=2] data,
         elif binsz[nbinsz-1] < data[2, counter]:
             k = nbinsz
         else:
-            while binsz[k] > data[2,counter]:
-                z += 1
+            while binsz[k] < data[2,counter]:
+                k += 1
 
         hist[i,j,k] += 1

@@ -54,7 +54,8 @@ class VorticityMagnitudeField(Field):
 
     def scale_wall(self):
         """
-        Scale the vorticity magnitude in wall units. Changes the data array
+        Scale the vorticity magnitude in wall units. Changes the data
+        array
         """
         NX = self.data.shape[0]
 
@@ -64,7 +65,8 @@ class VorticityMagnitudeField(Field):
 
     def scale_outer(self):
         """
-        Scale the vorticity magnitude in outer units. Changes the data array
+        Scale the vorticity magnitude in outer units. Changes the data
+        array
         """
         NX = self.data.shape[0]
 
@@ -72,6 +74,23 @@ class VorticityMagnitudeField(Field):
             adim = (self.stats.Re * self.stats.utau[self.NX0 + i]**2)/np.sqrt(
                 self.stats.Retau(self.NX0 + i))
             self.data[i, :, :] = self.data[i, :, :]/adim
+
+    def scale_inner(self):
+        """
+        Scale the vorticity magnitude in turbulent units. Changes the
+        data array
+        """
+        NX = self.data.shape[0]
+        NY = self.data.shape[1]
+
+        for i in range(NX):
+            adim = (self.stats.Re * self.stats.utau[self.NX0 + i]**2)/np.sqrt(
+                self.stats.Retau(self.NX0 + i))
+            self.data[i, :, :] = self.data[i, :, :]/adim
+
+            for j in range(1,NY):
+                adim = self.yr[j]/self.stats.delta99(self.NX0+i)
+                self.data[i, j, :] = self.data[i, j, :]/adim**(-1/2)
 
     def intermittency_profile(self, thres):
         """
@@ -106,34 +125,6 @@ class VorticityMagnitudeField(Field):
             self.stats.Re * self.stats.utau[NX0 + NX/2]**4)
         )
 
-    def vertical_distance_profile(self, thres, RANGE=0.5):
-        """
-        Vertical distance profile since first detection of the threshold.
-        This is the usual method found in the bibliography.
-        """
-        NX = self.data.shape[0]
-        NZ = self.data.shape[2]
-
-        #Coordinates at the vertices
-        yr=self.yr.copy()[::-1]
-        yr[:] = -(yr[:]-yr[0])
-        ogrid = np.linspace(-RANGE,RANGE,100)
-        acc = np.zeros((100,),dtype=np.float64)
-        data = np.zeros((len(yr),),dtype=np.float32)
-        
-        nstops = 0
-
-        for i,k in product(range(NX),range(NZ)):
-            data[:] = self.data[i,::-1,k] 
-            yloc = yr[np.where(data>thres)[0][0]]
-            itp = interpolate.interp1d(yr-yloc,data)
-            try:
-                acc[:] = acc[:] + itp(ogrid)
-            except ValueError:
-                nstops += 1
-    
-        return ogrid,acc/(NX*NZ-nstops)
-
     def interface_height_map(self, thres):
         """
         Computes the height map of the interface. Useful to further
@@ -159,6 +150,45 @@ class VorticityMagnitudeField(Field):
             height_map[i, k] = (yloct*datat + ylocb*datab)/(datab + datat)
 
         return yr[-1]-height_map
+
+    def vertical_distance_profile(self, thres, RANGE=0.5):
+        """
+        Vertical distance profile since first detection of the threshold.
+        This is the usual method found in the bibliography.
+        """
+        NOUT = 200
+        hmap = self.interface_height_map(thres)
+        NX = self.data.shape[0]
+        NZ = self.data.shape[2]
+        ogrid = np.linspace(-RANGE, RANGE, NOUT)
+        res = np.zeros((NOUT,), dtype=np.double)
+
+        for i,k in product(range(NX),range(NZ)):
+            itp = interpolate.interp1d(self.yr-hmap[i, k],
+                                       self.data[i,:,k],
+                                       kind='linear')
+            res += itp(ogrid)
+
+        return res/(NX*NZ), ogrid
+
+    def vertical_distance_histogram(self, thres, scale='log', nbins=200):
+        hmap = self.interface_height_map(thres)
+        NX = self.data.shape[0]
+        NY = self.data.shape[1]
+        NZ = self.data.shape[2]
+        
+        dist = np.zeros((NX, NY, NZ), dtype=np.double)
+        for i,k in product(range(NX), range(NZ)):
+            dist[i,:,k] = hmap[i,k] - self.yr
+
+        if scale == 'rect':
+            data = self.data.reshape(NX*NY*NZ)
+        else:
+            data = np.log10(self.data).reshape(NX*NY*NZ)
+
+        return np.histogram2d(dist.reshape(NX*NY*NZ),
+                              data,
+                              bins=nbins)
 
     def vertical_distance_histogram3d(self, thres, nbins=200):
         """
@@ -196,7 +226,8 @@ class VorticityMagnitudeField(Field):
             
         return histogram
 
-    def ball_distance_histogram(self, thres, nbins=200, npoints=1000000, FRAME=100):
+    def ball_distance_histogram(self, thres, nbins=200, npoints=1000000,
+                                FRAME=100, scale='log'):
         """
         Minimum ball distance histogram from the single largest surface.
         """
@@ -207,10 +238,18 @@ class VorticityMagnitudeField(Field):
         t = cKDTree(voxels)
         logging.info('Building the tree took {} s.'.format(time.clock()-now))
         now = time.clock()
-        dist = t.query(trgt)[0]
+        dist = t.query(trgt)[0]*(np.sign(sval-thres))
         logging.info('Distances took {} s'.format(time.clock()-now))
         now = time.clock()
-        res = np.histogram2d(dist, np.log10(sval), bins=nbins)
+
+        if scale == 'rect':
+            pass
+        elif scale == 'log':
+            sval = np.log10(sval)
+        else:
+            raise ValueError("scale not 'rect' or 'log'")
+
+        res = np.histogram2d(dist, sval, bins=nbins)
         logging.info('Histogram {} s'.format(time.clock()-now))
         return res
 
@@ -229,10 +268,30 @@ class VorticityMagnitudeField(Field):
         dist = t.query(trgt)[0]
         logging.info('Distances took {} s'.format(time.clock()-now))
         now = time.clock()
-        res = np.histogram3d(np.array([np.log10(sval), dist, height]),
-                             bins[0],
-                             bins[1],
-                             bins[2])
+        hist = histogram3d(bins[0],
+                           bins[1],
+                           bins[2])
+        hist.increment(np.array([np.log10(sval), dist, height]))
+        logging.info('Histogram {} s'.format(time.clock()-now))
+        return hist.serialize()
+
+    def ball_gradient_histogram(self, thres, nbins=200, npoints=1000000, FRAME=100):
+        """
+        Minimum ball distance histogram from the single largest surface.
+        """
+        surface = self.extract_largest_surface(thres)
+        voxels = surface.refined_point_list(self)
+        trgt, sval = self.generate_target_points(npoints, FRAME)
+        sval = sval - thres #This makes the trick
+        fac = np.sign(sval - thres)
+        now = time.clock()
+        t = cKDTree(voxels)
+        logging.info('Building the tree took {} s.'.format(time.clock()-now))
+        now = time.clock()
+        dist = fac*t.query(trgt)[0] #Take the sign into account
+        logging.info('Distances took {} s'.format(time.clock()-now))
+        now = time.clock()
+        res = np.histogram2d(dist, sval/dist, bins=nbins)
         logging.info('Histogram {} s'.format(time.clock()-now))
         return res
 

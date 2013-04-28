@@ -52,15 +52,15 @@ class histogram3d(object):
 
 class TestHistogram3(unittest.TestCase):
     def test_creation(self):
-        binsx = np.arange(0,1,10)
+        binsx = np.arange(1,2,10)
         hist = histogram3d(binsx)
         hist = histogram3d(binsx,binsx,binsx)
         self.assertEqual(binsx, hist.binsz)
     
     def test_increment(self):
-        data = np.random.rand(3,100)
-        hist = histogram3d(np.arange(0,1,10))
+        data = np.random.random((3,10000))
+        hist = histogram3d(np.linspace(0,1,10))
         hist.increment(data)
-
+        print(hist.hist.max(), hist.hist.min())
         self.assertTrue(True, True)
         
