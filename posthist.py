@@ -43,12 +43,6 @@ if __name__ == '__main__':
                         )/histslice.sum() for histslice in hist]
                 )
 
-            # dist_average = np.array(
-            #     [np.dot(distbin,
-            #             histslice
-            #             )/histslice.sum() for histslice in hist.T]
-            #     )
-
             #Add the first point, that does not appear in the histogram
             distbin[1:] = distbin[:-1]
             distbin[0] = 0.0
@@ -68,32 +62,32 @@ if __name__ == '__main__':
                        10**logvort_average[20:])
 
             if i == 2 and j == 3:
-                inbound = np.where(logvortbin > np.log10(thres))[0][0]
-                outbound = np.where(logvortbin > np.log10(0.3))[0][0]
                 f = pylab.figure(10)
-                pylab.contour(logvortbin,distbin,np.log10(hist),linewidths=2)
-                # pylab.contour(logvortbin[inbound:outbound],
-                #               distbin,
-                #               np.log(hist[:,inbound:outbound]),
-                #               linewidths=2)
+                pylab.contour(10**logvortbin,distbin,
+                              np.log10(hist),linewidths=2)
                 pylab.ylabel(r'$d$',fontsize=22)
                 pylab.xlabel(r'$\omega^* dB$',fontsize=22)
+                pylab.plot(thres*np.ones(logvortbin.shape),
+                           distbin,'k--',linewidth=2)
+                pylab.plot(10**logvortbin,np.zeros(distbin.shape),
+                           'k--',linewidth=2)
+                ax = pylab.gca()
+                ax.set_xscale('log')
                 f.subplots_adjust(bottom=0.15)
-                pylab.savefig('histogram1.svg')
 
             if i == 2 and j == 7:
-                inbound = np.where(logvortbin > np.log10(thres))[0][0]
-                outbound = np.where(logvortbin > np.log10(0.3))[0][0]
-                f = pylab.figure(11)
-                pylab.contour(logvortbin,distbin,np.log10(hist),linewidths=2)
-                # pylab.contour(logvortbin[inbound:outbound],
-                #               distbin,
-                #               np.log(hist[:,inbound:outbound]),
-                #               linewidths=2)
+                f = pylab.figure(20)
+                pylab.contour(10**logvortbin,distbin,
+                              np.log10(hist),linewidths=2)
                 pylab.ylabel(r'$d$',fontsize=22)
                 pylab.xlabel(r'$\omega^* dB$',fontsize=22)
+                pylab.plot(thres*np.ones(logvortbin.shape),
+                           distbin,'k--',linewidth=2)
+                pylab.plot(10**logvortbin,np.zeros(distbin.shape),
+                           'k--',linewidth=2)
+                ax = pylab.gca()
+                ax.set_xscale('log')
                 f.subplots_adjust(bottom=0.15)
-                pylab.savefig('histogram2.svg')
 
 
     f = pylab.figure(1)

@@ -40,17 +40,40 @@ class Field(object):
         volumes = np.empty((nsurf,), dtype=np.int)
 
         for obj, objnum in zip(find_objects(labeled), range(nsurf)):
-            volumes[objnum] = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
+            vol = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
+            if vol > labeled.shape[0]*labeled.shape[2]:
+                compvol = (labeled == objnum+1)
+                logging.info(
+                    'Found volume {} big. Stopping'.format(np.count_nonzero(compvol)))
+                found = True
+                break
 
+            volumes[objnum] = vol
+
+        if not found:
+            compvol = (labeled == volumes.argmax()+1)
+ 
         #Now, label the not(the large complimentary)
-        labeled, nsurf = label(np.bitwise_not(labeled == volumes.argmax()+1))
+        labeled, nsurf = label(np.bitwise_not(compvol))
         volumes = np.empty((nsurf,), dtype=np.int)
-        
+
+        #Return only the largest.        
         for obj, objnum in zip(find_objects(labeled), range(nsurf)):
-            volumes[objnum] = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
-        
-        #Return only the largest.
-        return labeled == volumes.argmax()+1
+            vol = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
+            if vol > labeled.shape[0]*labeled.shape[2]:
+                compvol = (labeled == objnum+1)
+                logging.info(
+                    'Found volume {} big. Stopping'.format(np.count_nonzero(compvol)))
+                return compvol
+
+            volumes[objnum] = vol
+
+        compvol = (labeled == volumes.argmax()+1)
+        logging.info(
+            'Found volume {} for {} total'.format(np.count_nonzero(compvol),
+                                                  np.prod(labeled.shape))
+            )
+        return compvol 
 
     def label_gt_largest(self, thres):
         """
@@ -179,10 +202,10 @@ class Field(object):
 
         return new_surface_list
 
-    def generate_target_points(self, NUM, OFFSET, HEIGHT=False):
+    def generate_target_points(self, thres, NUM, OFFSET):
         """
-        Returns NUM random samplessamples, framed with OFFSET, from
-        the field. For distance computation.
+        Returns NUM random samples, framed with OFFSET, from the
+        field. For distance computation.
         """
         nx, ny, nz = self.data.shape
         nx = nx-2*OFFSET
@@ -190,32 +213,22 @@ class Field(object):
         # print "...Framed shape", nx, ny, nz
         trgt = np.empty((NUM, 3), dtype=np.double)
         sval = np.empty((NUM,), dtype=np.double)
-        if HEIGHT:
-            height = np.empty((NUM,), dtype=np.double)
-
+        side = np.empty((NUM,), dtype=np.int8)
+        
         guessi = OFFSET + randint(0, nx-1, size=NUM)
         guessj = randint(0, ny-1, size=NUM)
         guessk = OFFSET + randint(0, nz-1, size=NUM)
         
-        if HEIGHT:
-            for n in range(NUM):
-                trgt[n, 0] = self.xr[guessi[n]]
-                trgt[n, 1] = self.yr[guessj[n]]
-                trgt[n, 2] = self.zr[guessk[n]]
-                sval[n] = self.data[guessi[n], guessj[n], guessk[n]]
-                height[n] = self.yr[guessj[n]]
-            
-        else:
-            for n in range(NUM):
-                trgt[n, 0] = self.xr[guessi[n]]
-                trgt[n, 1] = self.yr[guessj[n]]
-                trgt[n, 2] = self.zr[guessk[n]]
-                sval[n] = self.data[guessi[n], guessj[n], guessk[n]]
-            
-        if HEIGHT:
-            return trgt, sval, height
-        else:
-            return trgt, sval
+        mask = self.label_gt_largest_mask(thres).astype(np.int8)
+
+        for n in range(NUM):
+            trgt[n, 0] = self.xr[guessi[n]]
+            trgt[n, 1] = self.yr[guessj[n]]
+            trgt[n, 2] = self.zr[guessk[n]]
+            sval[n] = self.data[guessi[n], guessj[n], guessk[n]]
+            side[n] = 2*mask[guessi[n], guessj[n], guessk[n]]-1
+                
+        return trgt, sval, side
 
 class TestField(unittest.TestCase):
     """

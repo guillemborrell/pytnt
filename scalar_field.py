@@ -233,12 +233,12 @@ class VorticityMagnitudeField(Field):
         """
         surface = self.extract_largest_surface(thres)
         voxels = surface.refined_point_list(self)
-        trgt, sval = self.generate_target_points(npoints, FRAME)
+        trgt, sval, side= self.generate_target_points(thres, npoints, FRAME)
         now = time.clock()
         t = cKDTree(voxels)
         logging.info('Building the tree took {} s.'.format(time.clock()-now))
         now = time.clock()
-        dist = t.query(trgt)[0]*(np.sign(sval-thres))
+        dist = t.query(trgt)[0]*side
         logging.info('Distances took {} s'.format(time.clock()-now))
         now = time.clock()
 
