@@ -8,6 +8,7 @@ import logging
 import time
 import numpy as np
 from histogram3d import histogram3d
+from numpy.random import randint
 
 
 class VorticityMagnitudeField(Field):
@@ -151,6 +152,36 @@ class VorticityMagnitudeField(Field):
 
         return yr[-1]-height_map
 
+    def cleaned_interface_height_map(self, thres):
+        """
+        Computes the height map of the interface. Useful to further
+        compute the vertical distances or to analyze the interface in
+        a glance.
+        """
+        #This is correct, because the mask is at the vertices of the
+        #voxels.
+        mask = self.label_gt_largest_mask(thres)
+        NX = self.data.shape[0]
+        NY = self.data.shape[1]
+        NZ = self.data.shape[2]
+
+        yr = self.yr.copy()[::-1]
+        yr[:] = -(yr[:]-yr[0])
+        data = np.zeros((len(yr),),dtype=np.float32)
+        height_map = np.zeros((NX, NZ), dtype=np.float64)
+
+        for i, k in product(range(NX), range(NZ)):
+            data[:] = self.data[i,::-1,k]
+            lmask = mask[i,::-1,k]
+            ylocidx = np.where(lmask == True)[0][0]
+            datab = -(data[ylocidx]-thres)
+            ylocb = yr[ylocidx]
+            datat = data[ylocidx-1]-thres
+            yloct = yr[ylocidx-1]
+            height_map[i, k] = (yloct*datat + ylocb*datab)/(datab + datat)
+
+        return yr[-1]-height_map
+
     def vertical_distance_profile(self, thres, RANGE=0.5):
         """
         Vertical distance profile since first detection of the threshold.
@@ -171,8 +202,12 @@ class VorticityMagnitudeField(Field):
 
         return res/(NX*NZ), ogrid
 
-    def vertical_distance_histogram(self, thres, scale='log', nbins=200):
-        hmap = self.interface_height_map(thres)
+    def vertical_distance_histogram(self, thres, nbins=200,
+                                    clean=False, scale='log'):
+        if clean:
+            hmap = self.cleaned_interface_height_map(thres)
+        else:
+            hmap = self.interface_height_map(thres)
         NX = self.data.shape[0]
         NY = self.data.shape[1]
         NZ = self.data.shape[2]
@@ -189,6 +224,37 @@ class VorticityMagnitudeField(Field):
         return np.histogram2d(dist.reshape(NX*NY*NZ),
                               data,
                               bins=nbins)
+
+    def vertical_distance_weighted_histogram(self, thres, nbins=200,
+                                             clean=False, scale='log'):
+        if clean:
+            hmap = self.cleaned_interface_height_map(thres)
+        else:
+            hmap = self.interface_height_map(thres)
+        NX = self.data.shape[0]
+        NY = self.data.shape[1]
+        NZ = self.data.shape[2]
+        
+        dy = np.zeros((NY,), dtype=np.double)
+        dy[:-1] = np.diff(self.yr)
+        dy[-1] = dy[-2]
+
+        dist = np.zeros((NX, NY, NZ), dtype=np.double)
+        weight = np.zeros((NX, NY, NZ), dtype=np.double)
+        
+        for i,k in product(range(NX), range(NZ)):
+            dist[i,:,k] = hmap[i,k] - self.yr
+            weight[i,:,k] = dy
+
+        if scale == 'rect':
+            data = self.data.reshape(NX*NY*NZ)
+        else:
+            data = np.log10(self.data).reshape(NX*NY*NZ)
+
+        return np.histogram2d(dist.reshape(NX*NY*NZ),
+                              data,
+                              bins=nbins,
+                              weights=weight.reshape(NX*NY*NZ))
 
     def vertical_distance_histogram3d(self, thres, nbins=200):
         """
@@ -252,6 +318,34 @@ class VorticityMagnitudeField(Field):
         res = np.histogram2d(dist, sval, bins=nbins)
         logging.info('Histogram {} s'.format(time.clock()-now))
         return res
+
+    def ball_distance_weighted_histogram(self, thres, nbins=200, npoints=1000000,
+                                         FRAME=100, scale='log'):
+        """
+        Minimum ball distance histogram from the single largest surface.
+        """
+        surface = self.extract_largest_surface(thres)
+        voxels = surface.refined_point_list(self)
+        trgt, sval, side, weight = self.generate_weighted_points(thres, npoints, FRAME)
+        now = time.clock()
+        t = cKDTree(voxels)
+        logging.info('Building the tree took {} s.'.format(time.clock()-now))
+        now = time.clock()
+        dist = t.query(trgt)[0]*side
+        logging.info('Distances took {} s'.format(time.clock()-now))
+        now = time.clock()
+
+        if scale == 'rect':
+            pass
+        elif scale == 'log':
+            sval = np.log10(sval)
+        else:
+            raise ValueError("scale not 'rect' or 'log'")
+
+        res = np.histogram2d(dist, sval, bins=nbins, weights=weight)
+        logging.info('Histogram {} s'.format(time.clock()-now))
+        return res
+
 
     def ball_distance_histogram3d(self, thres, bins=False, npoints=1000000, FRAME=100):
         """
@@ -332,3 +426,42 @@ class VorticityComponentField(VorticityMagnitudeField):
             adim = (self.stats.Re * self.stats.utau[self.NX0 + i]**2)/np.sqrt(
                 self.stats.Retau(self.NX0 + i)) / np.sqrt(3)
             self.data[i, :, :] = self.data[i, :, :]/adim
+
+
+class VorticityMagnitudeFieldOffset(VorticityMagnitudeField):
+    def __init__(self, data, stats, NX0, NY0):
+        """
+        Data field
+        """
+        super(VorticityMagnitudeFieldOffset, self).__init__(data, stats, NX0)
+        self.NY0 = NY0
+
+    def generate_target_points(self, thres, NUM, OFFSET):
+        """
+        Returns NUM random samples, framed with OFFSET, from the
+        field. For distance computation.
+        """
+        nx, ny, nz = self.data.shape
+        nx = nx-2*OFFSET
+        nz = nz-2*OFFSET
+        # print "...Framed shape", nx, ny, nz
+        trgt = np.empty((NUM, 3), dtype=np.double)
+        sval = np.empty((NUM,), dtype=np.double)
+        side = np.empty((NUM,), dtype=np.int8)
+        
+        guessi = OFFSET + randint(0, nx-1, size=NUM)
+        guessj = randint(self.NY0, ny-1, size=NUM)
+        guessk = OFFSET + randint(0, nz-1, size=NUM)
+        
+        mask = self.label_gt_largest_mask(thres).astype(np.int8)
+
+        for n in range(NUM):
+            trgt[n, 0] = self.xr[guessi[n]]
+            trgt[n, 1] = self.yr[guessj[n]]
+            trgt[n, 2] = self.zr[guessk[n]]
+            sval[n] = self.data[guessi[n], guessj[n], guessk[n]]
+            #This is vertex centered, while the surface is center
+            #centered, maybe you have to interpolate
+            side[n] = 2*mask[guessi[n], guessj[n], guessk[n]]-1
+                
+        return trgt, sval, side

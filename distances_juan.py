@@ -39,7 +39,8 @@ if __name__ == '__main__':
         hists.append(thresholds)
         for thres in thresholds:
             print(thres)
-            hists.append(field.ball_distance_histogram(thres,500,50000000,150))
+            hists.append(field.ball_distance_weighted_histogram(
+                    thres,500,50000000,150))
         
         f.close()
         Results.append(hists)
@@ -48,7 +49,7 @@ if __name__ == '__main__':
 
     Results.append(hists)
         
-    resfile = open('/data4/guillem/distances/histogram_ball.dat','w')
+    resfile = open('/data4/guillem/distances/histogram_ball_weighted.dat','w')
     pickle.dump(Results,resfile)
     resfile.close()
 

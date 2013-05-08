@@ -226,9 +226,48 @@ class Field(object):
             trgt[n, 1] = self.yr[guessj[n]]
             trgt[n, 2] = self.zr[guessk[n]]
             sval[n] = self.data[guessi[n], guessj[n], guessk[n]]
+            #This is vertex centered, while the surface is center
+            #centered, maybe you have to interpolate
             side[n] = 2*mask[guessi[n], guessj[n], guessk[n]]-1
                 
         return trgt, sval, side
+
+    def generate_weighted_points(self, thres, NUM, OFFSET):
+        """
+        Returns NUM random samples, framed with OFFSET, from the
+        field. For distance computation.
+        """
+        nx, ny, nz = self.data.shape
+        nx = nx-2*OFFSET
+        nz = nz-2*OFFSET
+        # print "...Framed shape", nx, ny, nz
+        trgt = np.empty((NUM, 3), dtype=np.double)
+        sval = np.empty((NUM,), dtype=np.double)
+        side = np.empty((NUM,), dtype=np.int8)
+        weight = np.empty((NUM,), dtype=np.double)
+        
+        dy = np.zeros((ny,), dtype=np.double)
+        dy[:-1] = np.diff(self.yr)
+        dy[-1] = dy[-2]
+        
+        guessi = OFFSET + randint(0, nx-1, size=NUM)
+        guessj = randint(0, ny-1, size=NUM)
+        guessk = OFFSET + randint(0, nz-1, size=NUM)
+        
+        mask = self.label_gt_largest_mask(thres).astype(np.int8)
+
+        for n in range(NUM):
+            trgt[n, 0] = self.xr[guessi[n]]
+            trgt[n, 1] = self.yr[guessj[n]]
+            trgt[n, 2] = self.zr[guessk[n]]
+            sval[n] = self.data[guessi[n], guessj[n], guessk[n]]
+            #This is vertex centered, while the surface is center
+            #centered, maybe you have to interpolate
+            side[n] = 2*mask[guessi[n], guessj[n], guessk[n]]-1
+            weight[n] = dy[guessj[n]]
+                
+        return trgt, sval, side, weight
+
 
 class TestField(unittest.TestCase):
     """
