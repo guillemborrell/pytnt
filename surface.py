@@ -1,8 +1,9 @@
+from __future__ import print_function
 import numpy as np
 import logging
 import time
 from itertools import count, izip
-from numpy.random import random
+from numpy.random import random, seed
 from entity import Entity
 try:
     from _refine_fast import _refine_point_list
@@ -58,6 +59,7 @@ class Surface(Entity):
         """
         pnts = np.empty((self.nvox, 3), dtype=np.double)
         now = time.clock()
+        seed(int(now*3)) #Seed the random number generator
         if REFINE_FAST and fast:
             logging.info("Using Cython implementation of surface refining")
             retval = _refine_point_list(self.nvox,
@@ -90,4 +92,14 @@ class Surface(Entity):
                 pnts[cursor, 2] = opt[2]*dz + field.zr[k]
 
         logging.info('Refining took {} s.'.format(time.clock()-now))
+        return pnts
+
+    def oversampled_point_list(self, field, NGUESS=20, PASS=5, fast=True):
+        pnts = np.empty((PASS*self.nvox, 3), dtype=np.double)
+        print("Warning, oversampling the surface {} times".format(PASS))
+        for i in range(PASS):
+            print("Pass {}".format(i))
+            pnts[i*self.nvox:(i+1)*self.nvox, :] = self.refined_point_list(
+                field, NGUESS, fast)
+
         return pnts

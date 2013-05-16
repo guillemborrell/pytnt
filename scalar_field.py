@@ -227,6 +227,13 @@ class VorticityMagnitudeField(Field):
 
     def vertical_distance_weighted_histogram(self, thres, nbins=200,
                                              clean=False, scale='log'):
+        """
+        Weighted vertical histogram, hopefully a pdf.
+        
+        The memory usage for this case in large fields is humongous,
+        this is the reason why I decided not to use all the columns in
+        the field. Come on, it should be the same.
+        """
         if clean:
             hmap = self.cleaned_interface_height_map(thres)
         else:
@@ -239,22 +246,22 @@ class VorticityMagnitudeField(Field):
         dy[:-1] = np.diff(self.yr)
         dy[-1] = dy[-2]
 
-        dist = np.zeros((NX, NY, NZ), dtype=np.double)
-        weight = np.zeros((NX, NY, NZ), dtype=np.double)
+        dist = np.zeros((NX/2, NY, NZ/2), dtype=np.double)
+        weight = np.zeros((NX/2, NY, NZ/2), dtype=np.double)
         
         for i,k in product(range(NX), range(NZ)):
-            dist[i,:,k] = hmap[i,k] - self.yr
-            weight[i,:,k] = dy
+            dist[i/2,:,k/2] = hmap[i,k] - self.yr
+            weight[i/2,:,k/2] = dy
 
         if scale == 'rect':
-            data = self.data.reshape(NX*NY*NZ)
+            data = self.data[::2,:,::2].reshape(NX*NY*NZ/4)
         else:
-            data = np.log10(self.data).reshape(NX*NY*NZ)
+            data = np.log10(self.data[::2,:,::2]).reshape(NX*NY*NZ/4)
 
-        return np.histogram2d(dist.reshape(NX*NY*NZ),
+        return np.histogram2d(dist.reshape(NX*NY*NZ/4),
                               data,
                               bins=nbins,
-                              weights=weight.reshape(NX*NY*NZ))
+                              weights=weight.reshape(NX*NY*NZ/4))
 
     def vertical_distance_histogram3d(self, thres, nbins=200):
         """
@@ -346,46 +353,41 @@ class VorticityMagnitudeField(Field):
         logging.info('Histogram {} s'.format(time.clock()-now))
         return res
 
-
-    def ball_distance_histogram3d(self, thres, bins=False, npoints=1000000, FRAME=100):
-        """
-        Minimum ball distance co histogram with the magnitude of the
-        field and the relative height respect to the wall
-        """
-        surface = self.extract_largest_surface(thres)
-        voxels = surface.refined_point_list(self)
-        trgt, sval, height = self.generate_target_points(npoints, FRAME, HEIGHT=True)
-        now = time.clock()
-        t = cKDTree(voxels)
-        logging.info('Building the tree took {} s.'.format(time.clock()-now))
-        now = time.clock()
-        dist = t.query(trgt)[0]
-        logging.info('Distances took {} s'.format(time.clock()-now))
-        now = time.clock()
-        hist = histogram3d(bins[0],
-                           bins[1],
-                           bins[2])
-        hist.increment(np.array([np.log10(sval), dist, height]))
-        logging.info('Histogram {} s'.format(time.clock()-now))
-        return hist.serialize()
-
     def ball_gradient_histogram(self, thres, nbins=200, npoints=1000000, FRAME=100):
         """
         Minimum ball distance histogram from the single largest surface.
         """
         surface = self.extract_largest_surface(thres)
         voxels = surface.refined_point_list(self)
-        trgt, sval = self.generate_target_points(npoints, FRAME)
-        sval = sval - thres #This makes the trick
-        fac = np.sign(sval - thres)
+        trgt, sval, side  = self.generate_target_points(thres, npoints, FRAME)
+        sval = np.log10(np.abs(sval - thres)) #This makes the trick
         now = time.clock()
         t = cKDTree(voxels)
         logging.info('Building the tree took {} s.'.format(time.clock()-now))
         now = time.clock()
-        dist = fac*t.query(trgt)[0] #Take the sign into account
+        dist = t.query(trgt)[0]*side
         logging.info('Distances took {} s'.format(time.clock()-now))
         now = time.clock()
         res = np.histogram2d(dist, sval/dist, bins=nbins)
+        logging.info('Histogram {} s'.format(time.clock()-now))
+        return res
+
+    def ball_gradient_weighted_histogram(self, thres, nbins=200, npoints=1000000, FRAME=100):
+        """
+        Minimum ball distance histogram from the single largest surface.
+        """
+        surface = self.extract_largest_surface(thres)
+        voxels = surface.refined_point_list(self)
+        trgt, sval, side, weight  = self.generate_weighted_points(thres, npoints, FRAME)
+        sval = np.log10(np.abs(sval - thres)) #This makes the trick
+        now = time.clock()
+        t = cKDTree(voxels)
+        logging.info('Building the tree took {} s.'.format(time.clock()-now))
+        now = time.clock()
+        dist = t.query(trgt)[0]*side
+        logging.info('Distances took {} s'.format(time.clock()-now))
+        now = time.clock()
+        res = np.histogram2d(dist, sval/dist, bins=nbins, weights=weight)
         logging.info('Histogram {} s'.format(time.clock()-now))
         return res
 

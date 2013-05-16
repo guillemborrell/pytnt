@@ -38,7 +38,8 @@ class Field(object):
         #First, get the largest complimentary structure.
         labeled, nsurf = label(self.data < thres)
         volumes = np.empty((nsurf,), dtype=np.int)
-
+        found = False
+        
         for obj, objnum in zip(find_objects(labeled), range(nsurf)):
             vol = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
             if vol > labeled.shape[0]*labeled.shape[2]:
@@ -152,6 +153,10 @@ class Field(object):
         labeled, nsurf = label(np.bitwise_not(np.bitwise_or(fill, void)))
         return labeled,nsurf
 
+    def extract_complete_surface(self,thres):
+        labeled, nsurf = self.label_surfaces(thres)
+        return Surface(np.where(labeled >= 1), thres)
+
     def extract_surfaces(self, thres):
         """
         Extracts all the surfaces present in the field. SLOOOOW
@@ -191,16 +196,16 @@ class Field(object):
         """
         Provides the surface list for surfaces larger than nvoxels. SLOOOW
         """
-        new_surface_list = list()
+        labeled, nsurf = self.label_surfaces(thres)
+        volumes = np.empty((nsurf,), dtype=np.int)
+        mask = np.zeros(labeled.shape, dtype=np.bool)
 
-        surface_list = self.extract_surfaces(thres)
+        for obj, objnum in zip(find_objects(labeled), range(nsurf)):
+            vol = np.count_nonzero(labeled[obj[0], obj[1], obj[2]])
+            if vol > nvoxels:
+                mask = np.bitwise_or(mask, labeled == objnum+1)
 
-        for surface in surface_list:
-            surfsize = surface.number_of_voxels()
-            if surfsize > nvoxels:
-                new_surface_list.append(surface)
-
-        return new_surface_list
+        return Surface(np.where(mask), thres)
 
     def generate_target_points(self, thres, NUM, OFFSET):
         """
