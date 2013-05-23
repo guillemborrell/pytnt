@@ -9,6 +9,7 @@ try:
     from _refine_fast import _refine_point_list
     REFINE_FAST = True
 except ImportError:
+    print("Warning, fast refining not available")
     REFINE_FAST = False
     
 

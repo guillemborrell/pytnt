@@ -13,18 +13,18 @@ if __name__ == '__main__':
     pylab.close('all')
     hists = list()
 
-    NTOT = 1024
-    N = 512
     #Create the data
-    f = tables.openFile('/data4/guillem/distances/BK0000_omom.h5','r')
-    data = np.sqrt(f.root.Data[:N,:N,:N])
-    data = data/np.sqrt(data.mean()**2+ data.std()**2)
-    eta = f.root.Kolm_L.read()
-    print('Kolmogorov scale',eta)
+    f = tables.openFile('/data4/guillem/distances/iso384.vort.h5','r')
+    data = f.root.vorticity_magnitude.read().astype(np.float32)
+    N = data.shape[0]
+    data = data/np.sqrt(data.mean()**2 + data.std()**2)
+    caseeta = {512: 0.01018, 384: 0.01288, 265: 0.0215}
+    eta = caseeta[N]
+    print('Kolmogorov scale', eta)
 
-    x = np.linspace(0,2*np.pi*N/NTOT,N)/eta
-    y = np.linspace(0,2*np.pi*N/NTOT,N)/eta
-    z = np.linspace(0,2*np.pi*N/NTOT,N)/eta
+    x = np.linspace(0,2*np.pi,N)/eta
+    y = np.linspace(0,2*np.pi,N)/eta
+    z = np.linspace(0,2*np.pi,N)/eta
 
     field = Field(data,x,y,z)
 

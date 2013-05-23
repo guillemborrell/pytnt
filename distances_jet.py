@@ -13,35 +13,44 @@ import os
 if __name__ == '__main__':
     pylab.close('all')
     hists = list()
+    kol_eta = 4.279E-3
 
-    x,y,z,data = loadjet('/data4/guillem/jet/wabs_yi_3D_3702_data.bin')
+    z,y,x,data = loadjet('/data4/guillem/jet/wabs_yi_3D_3702_data.bin')
     central_plane = data[:,y.shape[0]/2,:]
-    data = data[:,300:-300,:]/np.sqrt(
+    data = data[:128,500:-500,:256]/np.sqrt(
         central_plane.mean()**2 + central_plane.std()**2)
-    y = y[300:-300]
+    x = x[:128].astype(np.double)/kol_eta
+    y = y[500:-500].astype(np.double)/kol_eta
+    z = z[:256].astype(np.double)/kol_eta
+
     NX = len(x)
     NY = len(y)
     NZ = len(z)
 
-    field = Field(data,
-                  z.astype(np.double),
-                  y.astype(np.double),
-                  x.astype(np.double))
+    field = Field(data,x,y,z)
 
-    thresholds = np.logspace(-1,1,5)
+    thresholds = np.logspace(-1,0,5)
     for thres in thresholds:
         print('Computing the pdf for the threshold {}'.format(thres))
         surface = field.extract_complete_surface(thres)
         voxels = surface.refined_point_list(field)
         
-        trgt, sval, side = field.generate_target_points(
-            thres, 50000000, OFFSET=100)
+        sval = data.reshape(NX*NY*NZ)
+        side = (2*(np.sign(data > thres).astype(np.int32))-1).reshape(NX*NY*NZ)
+        trgt = np.empty((NX*NY*NZ,3),dtype=np.double)
         
+        count = 0
+        for i,j,k in product(range(NX),range(NY),range(NZ)):
+            trgt[count,0] = x[i]
+            trgt[count,1] = y[j]
+            trgt[count,2] = z[k]
+            count += 1
+
         now = time.clock()
         t = cKDTree(voxels)
         print('Building the tree took {} seconds'.format(time.clock()-now))
         now = time.clock()
-        dist = t.query(trgt)[0]*side
+        dist = t.query(trgt)[0]*side.astype(np.double)
         print('Distance queries took {} seconds'.format(time.clock()-now))
         hists.append(np.histogram2d(dist,
                                     np.log10(sval),
@@ -60,4 +69,4 @@ if __name__ == '__main__':
         xlabel(r'$\omega/\omega^\prime$',fontsize=22)
         ylabel(r'$d$',fontsize=22)
 
-
+    
