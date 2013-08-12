@@ -298,18 +298,54 @@ class VorticityMagnitudeField(Field):
             histogram.increment(histdata)
             
         return histogram
+    
+    def ball_distance_mask(self,thres,FRAME):
+        mask = self.label_gt_largest_mask(thres).astype(np.int8)
+        return 2*mask-1
 
-    def ball_distance_histogram(self, thres, nbins=200, npoints=1000000,
+
+    def ball_distance_field(self,thres,FRAME):
+        surface = self.extract_largest_surface(thres)
+        voxels = surface.refined_point_list(self)
+        now = time.clock()
+        t = cKDTree(voxels)
+        logging.info(
+            'Building the tree took {} s.'.format(time.clock()-now))
+        
+        nx,ny,nz = self.data.shape
+        nx = nx-2*OFFSET
+        nz = nz_2*OFFSET
+        
+        field = np.empty((nx,ny,nz),dtype=np.double)
+        points = np.empty((ny,3), dtype= np.double)
+        side = self.ball_distance_mask(thres,FRAME)[OFFSET:-OFFSET,
+                                                    :,
+                                                    OFFSET:-OFFSET]
+
+        for i,k in product(range(nx),range(nz)):
+            if k == 0: logging.info('{} of {}'.format(i,nx))
+            points[:,0] = self.xr[i]
+            points[:,1] = self.yr
+            points[:,2] = self.zr[k]
+            field[i,:,k] = t.query(points)[0]*side[i,:,k]
+
+        return field
+
+
+    def ball_distance_histogram(self, thres, nbins=200,
+                                npoints=1000000,
                                 FRAME=100, scale='log'):
         """
         Minimum ball distance histogram from the single largest surface.
         """
         surface = self.extract_largest_surface(thres)
         voxels = surface.refined_point_list(self)
-        trgt, sval, side= self.generate_target_points(thres, npoints, FRAME)
+        trgt, sval, side= self.generate_target_points(
+            thres, npoints, FRAME)
         now = time.clock()
         t = cKDTree(voxels)
-        logging.info('Building the tree took {} s.'.format(time.clock()-now))
+        logging.info(
+            'Building the tree took {} s.'.format(time.clock()-now))
         now = time.clock()
         dist = t.query(trgt)[0]*side
         logging.info('Distances took {} s'.format(time.clock()-now))

@@ -45,7 +45,8 @@ class Field(object):
             if vol > labeled.shape[0]*labeled.shape[2]:
                 compvol = (labeled == objnum+1)
                 logging.info(
-                    'Found volume {} big. Stopping'.format(np.count_nonzero(compvol)))
+                    'Found volume {} big. Stopping'.format(
+                        np.count_nonzero(compvol)))
                 found = True
                 break
 
@@ -64,15 +65,16 @@ class Field(object):
             if vol > labeled.shape[0]*labeled.shape[2]:
                 compvol = (labeled == objnum+1)
                 logging.info(
-                    'Found volume {} big. Stopping'.format(np.count_nonzero(compvol)))
+                    'Found volume {} big. Stopping'.format(
+                        np.count_nonzero(compvol)))
                 return compvol
 
             volumes[objnum] = vol
 
         compvol = (labeled == volumes.argmax()+1)
         logging.info(
-            'Found volume {} for {} total'.format(np.count_nonzero(compvol),
-                                                  np.prod(labeled.shape))
+            'Found volume {} for {} total'.format(
+                np.count_nonzero(compvol),np.prod(labeled.shape))
             )
         return compvol 
 
